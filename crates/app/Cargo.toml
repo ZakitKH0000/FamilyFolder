@@ -1,6 +1,6 @@
 [package]
 name = "obshaya-app"
-version = "1.4.3"
+version = "1.4.4"
 edition = "2024"
 description = "Общая папка"
 
@@ -28,6 +28,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
 windows = { version = "0.62", features = [
+    "ApplicationModel",
+    "ApplicationModel_Activation",
+    "Foundation",
     "Win32_Foundation",
     "Win32_Graphics_Dwm",
     "Win32_Graphics_Gdi",

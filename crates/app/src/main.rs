@@ -144,6 +144,13 @@ fn apply_settings(app: &AppHandle, new: Settings) -> Res {
 }
 
 fn sync_autostart(app: &AppHandle, enabled: bool) {
+    // У программы из Store — своя задача автозапуска (и у проверочного пакета — тоже своя).
+    if shell::is_packaged() {
+        if let Err(e) = shell::store_autostart(enabled) {
+            tracing::warn!("автозапуск (Store): {e:#}");
+        }
+        return;
+    }
     if cfg!(debug_assertions) || std::env::var_os("OBSHAYA_DATA_DIR").is_some() {
         return; // отладочная сборка и тестовые экземпляры не прописываются в автозапуск
     }
@@ -428,7 +435,7 @@ fn main() {
     }
     let updated = args.iter().any(|a| a == "--updated");
     // После автозапуска и обновления окно не показываем — программа просто работает у часов.
-    let autostarted = updated || args.iter().any(|a| a == "--autostart");
+    let autostarted = updated || args.iter().any(|a| a == "--autostart") || shell::started_at_login();
 
     let icon_path = data_dir.join("icon.png");
     let _ = std::fs::create_dir_all(&data_dir);
@@ -464,12 +471,21 @@ fn main() {
                 shell::decorate_folder(&settings.folder);
                 sync_autostart(&handle, settings.autostart);
                 shell::restore(&data_dir, &settings.folder);
+                if shell::is_packaged() {
+                    // Store ставит каждую версию в новую папку — значок у ярлыков указывает на старую.
+                    shell::relabel(&settings.folder);
+                }
             }
             menu::cleanup();
             dock::start(handle.clone());
-            updater::startup(&handle);
+            if shell::is_packaged() {
+                // Программу из Store обновляет Store: установщики от семьи не нужны и не ставятся.
+                engine.disable_family_updates();
+            } else {
+                updater::startup(&handle);
+                updater::auto_loop(&handle);
+            }
             tour::startup(&handle);
-            updater::auto_loop(&handle);
             if updated {
                 notify::updated(env!("CARGO_PKG_VERSION"));
             }

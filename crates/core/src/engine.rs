@@ -176,6 +176,8 @@ pub(crate) struct Inner {
     pub update_downloading: Mutex<HashSet<String>>,
     /// Установщики с неверной подписью — больше не скачивать.
     pub update_rejected: Mutex<HashSet<String>>,
+    /// Установщики от семьи не нужны: программу обновляет Microsoft Store.
+    pub family_updates_off: AtomicBool,
     /// Кому предложить только что положенное в папку (бросили на устройство в шторке):
     /// элемент → (устройства, до какого времени ждать появления).
     pub targets: Mutex<HashMap<String, (Vec<String>, Instant)>>,
@@ -444,6 +446,7 @@ impl Engine {
             update_ready: Mutex::default(),
             update_downloading: Mutex::default(),
             update_rejected: Mutex::default(),
+            family_updates_off: AtomicBool::new(false),
             targets: Mutex::default(),
             http: reqwest::Client::builder()
                 .user_agent(concat!("ObshayaPapka/", env!("CARGO_PKG_VERSION")))
@@ -727,6 +730,11 @@ impl Engine {
     /// Установщик с проверенной подписью: отдавать другим устройствам; если он новее — готов к установке.
     pub async fn set_update_package(&self, version: &str, path: PathBuf, sig: &str) -> Result<()> {
         crate::update::set_package(&self.0, version, path, sig).await
+    }
+
+    /// Программа из Microsoft Store: её обновляет Store, установщики от семьи не скачивать.
+    pub fn disable_family_updates(&self) {
+        self.0.family_updates_off.store(true, Ordering::Relaxed);
     }
 
     /// Подпись не сошлась — этот установщик больше не скачивать.

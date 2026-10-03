@@ -42,7 +42,8 @@ fn have_version(inner: &Inner) -> String {
 
 /// Пришло приветствие с установщиком — скачать, если он новее того, что есть.
 pub(crate) fn offered(inner: &Arc<Inner>, peer: &str, info: UpdateInfo) {
-    if !version_newer(&info.version, &have_version(inner))
+    if inner.family_updates_off.load(std::sync::atomic::Ordering::Relaxed)
+        || !version_newer(&info.version, &have_version(inner))
         || lock(&inner.update_rejected).contains(&info.hash)
         || !lock(&inner.update_downloading).insert(info.hash.clone())
     {

@@ -2,7 +2,7 @@
 // Страница открывается в невидимом Edge; время в ней (JS и CSS) замедлено, кадры пишутся в папку,
 // а собирает их в анимацию scripts/showcase.py. Сценки — design/showcase.html.
 //   node scripts/showcase.js <адрес> <папка или файл.png> <ширина>x<высота> [--still] [--js "<код>"]
-//        [--wait 2] [--rate 0.25] [--max 40] [--dpr 2] [--light]
+//        [--wait 2] [--rate 0.25] [--max 40] [--dpr 2] [--light] [--transparent]
 // Анимация: страница получает window.__go() и ставит window.__done = true, когда сценка закончилась.
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -10,10 +10,10 @@ const os = require('os');
 const path = require('path');
 
 const [url, out, size, ...rest] = process.argv.slice(2);
-const opt = { rate: 0.25, max: 40, dpr: 2, wait: 2, still: false, light: false, js: '', probe: '' };
+const opt = { rate: 0.25, max: 40, dpr: 2, wait: 2, still: false, light: false, transparent: false, js: '', probe: '' };
 for (let i = 0; i < rest.length; i++) {
   const k = rest[i].replace(/^--/, '');
-  if (k === 'still' || k === 'light') opt[k] = true;
+  if (k === 'still' || k === 'light' || k === 'transparent') opt[k] = true;
   else if (k === 'js' || k === 'probe') opt[k] = rest[++i];
   else opt[k] = Number(rest[++i]);
 }
@@ -70,6 +70,7 @@ async function main() {
     await call('Page.enable');
     await call('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: opt.dpr, mobile: false });
     await call('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: opt.light ? 'light' : 'dark' }] });
+    if (opt.transparent) await call('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
     await call('Page.addScriptToEvaluateOnNewDocument', { source: TIME(opt.rate) });
     await call('Animation.enable');
     const loaded = new Promise(r => (on['Page.loadEventFired'] = [r]));

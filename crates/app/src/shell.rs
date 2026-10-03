@@ -23,16 +23,65 @@ use windows::Win32::UI::WindowsAndMessaging::{SPI_GETWORKAREA, SW_SHOWNORMAL, SY
 use windows::core::{HSTRING, Interface, PCWSTR, w};
 
 pub const AUMID: &str = "com.obshayapapka.app";
+/// Задача автозапуска из манифеста пакета Store (`store/AppxManifest.xml`).
+const STARTUP_TASK: &str = "FamilyFolderStartup";
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 fn wide(p: &Path) -> Vec<u16> {
     p.as_os_str().encode_wide().chain(Some(0)).collect()
 }
 
+/// Программа поставлена из Microsoft Store (пакет MSIX): семейство пакета, иначе `None`.
+pub fn package_family() -> Option<&'static str> {
+    static PFN: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
+    PFN.get_or_init(|| {
+        let family = windows::ApplicationModel::Package::Current().and_then(|p| p.Id()).and_then(|id| id.FamilyName());
+        family.ok().map(|f| f.to_string())
+    })
+    .as_deref()
+}
+
+pub fn is_packaged() -> bool {
+    package_family().is_some()
+}
+
+/// От чьего имени уведомления: у пакета Store — его собственное имя программы.
+pub fn aumid() -> String {
+    package_family().map_or_else(|| AUMID.to_string(), |f| format!("{f}!App"))
+}
+
+/// Программу из Store запустила Windows при входе (задача автозапуска) — окно не показывать.
+pub fn started_at_login() -> bool {
+    use windows::ApplicationModel::Activation::ActivationKind;
+    is_packaged()
+        && windows::ApplicationModel::AppInstance::GetActivatedEventArgs()
+            .and_then(|a| a.Kind())
+            .is_ok_and(|k| k == ActivationKind::StartupTask)
+}
+
+/// Автозапуск программы из Store — задача из манифеста (запись в реестре пакету не помогает).
+/// Выключенную в «Диспетчере задач» включить может только сам человек.
+pub fn store_autostart(enabled: bool) -> Result<()> {
+    use windows::ApplicationModel::{StartupTask, StartupTaskState};
+    let task = StartupTask::GetAsync(&HSTRING::from(STARTUP_TASK))?.join()?;
+    match task.State()? {
+        StartupTaskState::Disabled if enabled => {
+            task.RequestEnableAsync()?.join()?;
+        }
+        StartupTaskState::Enabled if !enabled => task.Disable()?,
+        _ => {}
+    }
+    Ok(())
+}
+
 /// Чтобы уведомления показывались от имени «Общая папка» с нашим значком.
+/// У программы из Store имя и значок уже есть — у пакета.
 pub fn register_aumid(icon: &Path) {
     use winreg::RegKey;
     use winreg::enums::HKEY_CURRENT_USER;
+    if is_packaged() {
+        return;
+    }
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     if let Ok((key, _)) = hkcu.create_subkey(format!(r"Software\Classes\AppUserModelId\{AUMID}")) {
         let _ = key.set_value("DisplayName", &t!("app.name"));

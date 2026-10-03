@@ -8,7 +8,6 @@ use tauri_winrt_notification::{IconCrop, Toast};
 
 use obshaya_core::t;
 
-use crate::shell::AUMID;
 use crate::{AppState, panel};
 
 static ICON: OnceLock<PathBuf> = OnceLock::new();
@@ -18,8 +17,9 @@ pub fn init(icon: PathBuf) {
 }
 
 fn base(title: &str) -> Toast {
-    let mut t = Toast::new(AUMID).title(title);
-    if let Some(icon) = ICON.get() {
+    let mut t = Toast::new(&crate::shell::aumid()).title(title);
+    // У программы из Store значок — у пакета, а файл из её папки данных Windows не увидит.
+    if let Some(icon) = ICON.get().filter(|_| !crate::shell::is_packaged()) {
         t = t.icon(icon, IconCrop::Square, "");
     }
     t
