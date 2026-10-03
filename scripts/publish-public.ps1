@@ -12,6 +12,8 @@ if (-not (Test-Path (Join-Path $pub '.git'))) {
     git -C $pub config user.email '329148760+ZakitKH0000@users.noreply.github.com'
 }
 if (git -C $root status --porcelain) { throw 'Есть несохранённые изменения — сначала сохраните их (git commit).' }
+# Файлы из архива уже с нужными окончаниями строк — без пересчёта (и без предупреждений git на каждый файл).
+git -C $pub config core.autocrlf false
 
 Get-ChildItem $pub -Force | Where-Object { $_.Name -ne '.git' } | Remove-Item -Recurse -Force
 $zip = Join-Path $env:TEMP 'family-folder-public.zip'

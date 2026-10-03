@@ -43,7 +43,10 @@ ${StrLoc}
 !define WEBVIEW2APPGUID "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
 
 !define MANUFACTURER "{{manufacturer}}"
-!define PRODUCTNAME "{{product_name}}"
+; Общая папка: PRODUCTNAME — неизменный ключ установки (папка, записи в реестре) со времён 1.0: по нему
+; обновление находит старую версию. Название для людей — $(APPNAME) ниже, на языке установщика
+; (productName в tauri.conf.json — «Family Folder» — сюда больше не попадает).
+!define PRODUCTNAME "Общая папка"
 !define VERSION "{{version}}"
 !define VERSIONWITHBUILD "{{version_with_build}}"
 !define HOMEPAGE "{{homepage}}"
@@ -81,7 +84,6 @@ Var NoShortcutMode
 Var WixMode
 Var OldMainBinaryName
 
-Name "${PRODUCTNAME}"
 BrandingText "${COPYRIGHT}"
 OutFile "${OUTFILE}"
 
@@ -92,8 +94,8 @@ OutFile "${OUTFILE}"
 InstallDir "${PLACEHOLDER_INSTALL_DIR}"
 
 VIProductVersion "${VERSIONWITHBUILD}"
-VIAddVersionKey "ProductName" "${PRODUCTNAME}"
-VIAddVersionKey "FileDescription" "${PRODUCTNAME}"
+VIAddVersionKey "ProductName" "Family Folder"
+VIAddVersionKey "FileDescription" "Family Folder"
 VIAddVersionKey "LegalCopyright" "${COPYRIGHT}"
 VIAddVersionKey "FileVersion" "${VERSION}"
 VIAddVersionKey "ProductVersion" "${VERSION}"
@@ -486,6 +488,19 @@ FunctionEnd
   !include "{{this}}"
 {{/each}}
 
+; Общая папка: название программы для людей — на языке установщика (как app.name в crates/core/locales).
+; Дальше «Пуск» и «Приложения» переименовывает сама программа под свой язык (shell::sync_app_name).
+LangString APPNAME ${LANG_ENGLISH} "Family Folder"
+LangString APPNAME ${LANG_RUSSIAN} "Общая папка"
+LangString APPNAME ${LANG_UKRAINIAN} "Спільна папка"
+LangString APPNAME ${LANG_GERMAN} "Familienordner"
+LangString APPNAME ${LANG_SPANISH} "Carpeta familiar"
+LangString APPNAME ${LANG_FRENCH} "Dossier familial"
+LangString APPNAME ${LANG_PORTUGUESE} "Pasta da família"
+LangString APPNAME ${LANG_TURKISH} "Aile Klasörü"
+LangString APPNAME ${LANG_SIMPCHINESE} "家庭文件夹"
+Name "$(APPNAME)"
+
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode
   ${IfNot} ${Errors}
@@ -654,7 +669,7 @@ Section Install
     !insertmacro NSIS_HOOK_PREINSTALL
   !endif
 
-  !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "${PRODUCTNAME}"
+  !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "$(APPNAME)"
 
   ; Copy main executable
   File "${MAINBINARYSRCPATH}"
@@ -710,7 +725,11 @@ Section Install
   WriteRegStr SHCTX "${UNINSTKEY}" "MainBinaryName" "${MAINBINARYNAME}.exe"
 
   ; Registry information for add/remove programs
-  WriteRegStr SHCTX "${UNINSTKEY}" "DisplayName" "${PRODUCTNAME}"
+  ; Общая папка: название в «Приложениях» после первой установки ведёт программа (на своём языке).
+  ReadRegStr $R0 SHCTX "${UNINSTKEY}" "DisplayName"
+  ${If} $R0 == ""
+    WriteRegStr SHCTX "${UNINSTKEY}" "DisplayName" "$(APPNAME)"
+  ${EndIf}
   WriteRegStr SHCTX "${UNINSTKEY}" "DisplayIcon" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\""
   WriteRegStr SHCTX "${UNINSTKEY}" "DisplayVersion" "${VERSION}"
   WriteRegStr SHCTX "${UNINSTKEY}" "Publisher" "${MANUFACTURER}"
@@ -791,7 +810,7 @@ Section Uninstall
     !insertmacro NSIS_HOOK_PREUNINSTALL
   !endif
 
-  !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "${PRODUCTNAME}"
+  !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "$(APPNAME)"
 
   ; Delete the app directory and its content from disk
   ; Copy main executable
@@ -857,6 +876,21 @@ Section Uninstall
     ${If} $0 = 1
       !insertmacro UnpinShortcut "$DESKTOP\${PRODUCTNAME}.lnk"
       Delete "$DESKTOP\${PRODUCTNAME}.lnk"
+    ${EndIf}
+
+    ; Общая папка: ярлыки с названием на языке установщика (с 1.4.3). Названные на языке программы
+    ; убирает сама программа (--uninstall в installer-hooks.nsh).
+    !insertmacro IsShortcutTarget "$SMPROGRAMS\$(APPNAME).lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
+    Pop $0
+    ${If} $0 = 1
+      !insertmacro UnpinShortcut "$SMPROGRAMS\$(APPNAME).lnk"
+      Delete "$SMPROGRAMS\$(APPNAME).lnk"
+    ${EndIf}
+    !insertmacro IsShortcutTarget "$DESKTOP\$(APPNAME).lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
+    Pop $0
+    ${If} $0 = 1
+      !insertmacro UnpinShortcut "$DESKTOP\$(APPNAME).lnk"
+      Delete "$DESKTOP\$(APPNAME).lnk"
     ${EndIf}
   ${EndIf}
 
@@ -981,11 +1015,11 @@ Function CreateOrUpdateStartMenuShortcut
 
   !if "${STARTMENUFOLDER}" != ""
     CreateDirectory "$SMPROGRAMS\$AppStartMenuFolder"
-    CreateShortcut "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
-    !insertmacro SetLnkAppUserModelId "$SMPROGRAMS\$AppStartMenuFolder\${PRODUCTNAME}.lnk"
+    CreateShortcut "$SMPROGRAMS\$AppStartMenuFolder\$(APPNAME).lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
+    !insertmacro SetLnkAppUserModelId "$SMPROGRAMS\$AppStartMenuFolder\$(APPNAME).lnk"
   !else
-    CreateShortcut "$SMPROGRAMS\${PRODUCTNAME}.lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
-    !insertmacro SetLnkAppUserModelId "$SMPROGRAMS\${PRODUCTNAME}.lnk"
+    CreateShortcut "$SMPROGRAMS\$(APPNAME).lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
+    !insertmacro SetLnkAppUserModelId "$SMPROGRAMS\$(APPNAME).lnk"
   !endif
 FunctionEnd
 
@@ -1008,6 +1042,6 @@ Function CreateOrUpdateDesktopShortcut
     ${EndIf}
   ${EndIf}
 
-  CreateShortcut "$DESKTOP\${PRODUCTNAME}.lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
-  !insertmacro SetLnkAppUserModelId "$DESKTOP\${PRODUCTNAME}.lnk"
+  CreateShortcut "$DESKTOP\$(APPNAME).lnk" "$INSTDIR\${MAINBINARYNAME}.exe"
+  !insertmacro SetLnkAppUserModelId "$DESKTOP\$(APPNAME).lnk"
 FunctionEnd

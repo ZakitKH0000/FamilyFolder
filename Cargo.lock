@@ -3666,7 +3666,7 @@ dependencies = [
 
 [[package]]
 name = "obshaya-app"
-version = "1.4.2"
+version = "1.4.3"
 dependencies = [
  "anyhow",
  "data-encoding",
@@ -3690,7 +3690,7 @@ dependencies = [
 
 [[package]]
 name = "obshaya-core"
-version = "1.4.2"
+version = "1.4.3"
 dependencies = [
  "anyhow",
  "blake3",

@@ -20,6 +20,10 @@ pub fn set_test_mode() {
     TEST.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
+pub fn is_test() -> bool {
+    TEST.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 fn remove_classic() {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     for class in ["*", "Directory"] {

@@ -29,7 +29,10 @@ if (-not $exe) { throw "installer $version not found" }
 npx tauri signer sign -f $key -p $pw $exe.FullName | Out-Null
 if (-not (Test-Path "$($exe.FullName).sig")) { throw 'signing failed' }
 
+# Имя файла — по-английски, с версией (так он лежит и в выпусках на GitHub). Подпись — рядом, с тем же именем.
 $dist = Join-Path $root 'dist'
 New-Item -ItemType Directory -Force $dist | Out-Null
-Copy-Item $exe.FullName, "$($exe.FullName).sig" $dist -Force
-Write-Host "Ready: dist\$($exe.Name) (+ .sig)"
+$name = "FamilyFolder-$version-Setup.exe"
+Copy-Item $exe.FullName (Join-Path $dist $name) -Force
+Copy-Item "$($exe.FullName).sig" (Join-Path $dist "$name.sig") -Force
+Write-Host "Ready: dist\$name (+ .sig)"

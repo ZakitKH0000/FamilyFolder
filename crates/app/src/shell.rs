@@ -13,10 +13,10 @@ use windows::Win32::Storage::FileSystem::{
     FILE_FLAGS_AND_ATTRIBUTES, GetFileAttributesW, INVALID_FILE_ATTRIBUTES, SetFileAttributesW,
 };
 use windows::Win32::System::Com::{
-    CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, CoCreateInstance, CoInitializeEx, CoTaskMemFree, IPersistFile,
+    CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, CoCreateInstance, CoInitializeEx, CoTaskMemFree, IPersistFile, STGM_READ,
 };
 use windows::Win32::UI::Shell::{
-    FOLDERID_Desktop, FOLDERID_SendTo, IShellLinkW, KF_FLAG_DEFAULT, SHCNE_UPDATEITEM, SHCNF_PATHW, SHChangeNotify,
+    FOLDERID_Desktop, FOLDERID_Programs, FOLDERID_SendTo, IShellLinkW, KF_FLAG_DEFAULT, SHCNE_UPDATEITEM, SHCNF_PATHW, SHChangeNotify,
     SHGetKnownFolderPath, SetCurrentProcessExplicitAppUserModelID, ShellExecuteW, ShellLink,
 };
 use windows::Win32::UI::WindowsAndMessaging::{SPI_GETWORKAREA, SW_SHOWNORMAL, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, SystemParametersInfoW};
@@ -177,6 +177,61 @@ pub fn move_links(old: &Path, new: &Path) {
     ));
 }
 
+/// Запись программы в «Приложениях» Windows. «Общая папка» здесь — неизменный ключ установки
+/// (PRODUCTNAME в installer.nsi), а не название для людей.
+const UNINSTALL_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Общая папка";
+
+/// Куда ведёт ярлык.
+fn link_target(lnk: &Path) -> Option<PathBuf> {
+    unsafe {
+        let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+        let link: IShellLinkW = CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER).ok()?;
+        let file: IPersistFile = link.cast().ok()?;
+        file.Load(&HSTRING::from(lnk.as_os_str()), STGM_READ).ok()?;
+        let mut buf = [0u16; 1024];
+        link.GetPath(&mut buf, std::ptr::null_mut(), 0).ok()?;
+        let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+        Some(PathBuf::from(String::from_utf16_lossy(&buf[..len])))
+    }
+}
+
+/// Ярлыки программы в меню «Пуск» (их делает установщик) — под любым из её названий.
+fn start_menu_links() -> Vec<PathBuf> {
+    let (Ok(dir), Ok(exe)) = (known_dir(&FOLDERID_Programs), std::env::current_exe()) else { return Vec::new() };
+    let exe = exe.to_string_lossy().to_lowercase();
+    let mut names = obshaya_core::i18n::all_values("app.name");
+    names.sort();
+    names.dedup();
+    names
+        .iter()
+        .map(|n| dir.join(format!("{n}.lnk")))
+        .filter(|p| p.exists() && link_target(p).is_some_and(|t| t.to_string_lossy().to_lowercase() == exe))
+        .collect()
+}
+
+/// Название в «Пуске» и в «Приложениях» Windows — на языке программы. Установщик называет её
+/// по языку Windows (до 1.4.3 — всегда «Общая папка»), а язык программы может быть другим.
+pub fn sync_app_name() {
+    use winreg::RegKey;
+    use winreg::enums::{HKEY_CURRENT_USER, KEY_READ, KEY_SET_VALUE};
+    if crate::menu::is_test() {
+        return;
+    }
+    let links = start_menu_links();
+    if let Some(want) = links.first().map(|l| l.with_file_name(lnk_name())) {
+        for l in links.iter().filter(|l| **l != want) {
+            // Под нужным названием ярлык уже есть — этот лишний (поставили поверх на другом языке).
+            let _ = if want.exists() { std::fs::remove_file(l) } else { std::fs::rename(l, &want) };
+        }
+    }
+    let name = t!("app.name");
+    if let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(UNINSTALL_KEY, KEY_READ | KEY_SET_VALUE)
+        && key.get_value::<String, _>("DisplayName").ok().as_deref() != Some(name.as_str())
+    {
+        let _ = key.set_value("DisplayName", &name);
+    }
+}
+
 /// Язык сменился: ярлыки называются по-новому, подсказка у папки — на новом языке.
 pub fn relabel(folder: &Path) {
     for old in existing_links() {
@@ -245,7 +300,7 @@ pub fn uninstall(data_dir: &Path, folder: &Path) {
     if let Ok(data) = serde_json::to_vec(&r) {
         let _ = std::fs::write(data_dir.join("restore.json"), data);
     }
-    for lnk in links {
+    for lnk in links.into_iter().chain(start_menu_links()) {
         let _ = std::fs::remove_file(lnk);
     }
     let f = ps_quote(folder);
@@ -364,4 +419,17 @@ pub fn work_area() -> RECT {
         let _ = SystemParametersInfoW(SPI_GETWORKAREA, 0, Some(&mut r as *mut RECT as _), SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0));
     }
     r
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn link_target_reads_shortcut() {
+        let dir = std::env::temp_dir().join(format!("obshaya-lnk-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let lnk = dir.join("test.lnk");
+        super::write_shortcut(&lnk, &dir).unwrap();
+        assert_eq!(super::link_target(&lnk).unwrap(), dir);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

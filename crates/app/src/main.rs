@@ -132,6 +132,7 @@ fn apply_settings(app: &AppHandle, new: Settings) -> Res {
     if old.language != new.language {
         tray::refresh(app);
         shell::register_aumid(&st.icon);
+        std::thread::spawn(shell::sync_app_name);
         if new.onboarded {
             shell::relabel(&new.folder);
         }
@@ -452,6 +453,7 @@ fn main() {
             let (engine, rx) = tauri::async_runtime::block_on(Engine::start(data_dir.clone()))?;
             // Язык уже выбран «двигателем» — теперь имя в уведомлениях на нём.
             shell::register_aumid(&icon_path);
+            std::thread::spawn(shell::sync_app_name);
             app.manage(AppState { engine: engine.clone(), data_dir: data_dir.clone(), icon: icon_path.clone() });
             create_window(&handle, &data_dir)?;
             island::create(&handle, &data_dir)?;
