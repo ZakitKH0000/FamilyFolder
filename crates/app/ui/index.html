@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Family Folder</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="mock.js"></script>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="titlebar" data-tauri-drag-region>
+      <img class="logo" src="logo.png" alt="" data-tauri-drag-region>
+      <span class="title" data-tauri-drag-region data-t="app.name"></span>
+      <div class="spacer" data-tauri-drag-region></div>
+      <button class="tb-btn" id="btn-settings" data-t-title="set.title"></button>
+      <button class="tb-btn" id="btn-hide" data-t-title="tb.hide"></button>
+    </header>
+
+    <main id="main">
+      <section class="status" id="status"></section>
+      <div id="banner"></div>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-tab="in" role="tab"><span data-t="tab.in"></span><span class="count" id="count-in"></span></button>
+        <button class="tab" data-tab="out" role="tab"><span data-t="tab.out"></span><span class="count" id="count-out"></span></button>
+        <div class="tab-ink" id="tab-ink"></div>
+        <div class="buddy" id="buddy"><div class="buddy-bot"></div><div class="buddy-say hidden"></div></div>
+      </nav>
+      <div class="lists">
+        <div class="list" id="list-in"></div>
+        <div class="list hidden" id="list-out"></div>
+      </div>
+      <footer class="footer">
+        <button class="btn subtle" id="btn-open-folder"><span class="ico" data-icon="folderOpen"></span><span data-t="btn.open_folder"></span></button>
+        <button class="btn subtle note-btn" id="btn-note" data-act="note-new"><span class="ico" data-icon="chat"></span><span data-t="note.btn"></span></button>
+        <div class="spacer"></div>
+        <button class="chip" id="pause-chip"></button>
+        <button class="chip" id="cloud-chip"></button>
+      </footer>
+    </main>
+
+    <section class="view hidden" id="settings"></section>
+    <section class="view hidden" id="about"></section>
+    <section class="view hidden" id="onboarding"></section>
+    <div class="pop hidden" id="pop"></div>
+    <div class="drop-zone hidden" id="drop-zone"><div data-t="buddy.drop"></div></div>
+    <div class="toast hidden" id="toast"></div>
+    <div class="modal hidden" id="modal"></div>
+  </div>
+  <script src="icons.js"></script>
+  <script src="papych.js"></script>
+  <script src="buddy.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

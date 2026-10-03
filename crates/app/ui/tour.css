@@ -1,0 +1,48 @@
+/* Экскурсия с Папычем: прозрачное окно на весь экран, лёгкое затемнение с «прожектором». */
+@property --sx { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --sy { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --sr { syntax: '<length>'; inherits: false; initial-value: 0px; }
+
+html, body {
+  margin: 0; height: 100%; overflow: hidden; background: transparent;
+  font: 14px/1.45 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif; color: #f3f3f5;
+  user-select: none; cursor: default;
+}
+
+.dim {
+  position: fixed; inset: 0; background: rgba(4, 8, 18, .55); opacity: 0;
+  transition: opacity .5s, --sx .7s cubic-bezier(.3, .8, .3, 1), --sy .7s cubic-bezier(.3, .8, .3, 1), --sr .7s cubic-bezier(.3, .8, .3, 1);
+  -webkit-mask: radial-gradient(circle at var(--sx) var(--sy), transparent calc(var(--sr) - 2px), #000 calc(var(--sr) + 36px));
+  mask: radial-gradient(circle at var(--sx) var(--sy), transparent calc(var(--sr) - 2px), #000 calc(var(--sr) + 36px));
+}
+.dim.on { opacity: 1; }
+
+.bot { position: fixed; left: 0; top: 0; width: 230px; transform-origin: 50% 85.1%; will-change: transform; z-index: 2; }
+.bot .papych { width: 230px; filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .45)) drop-shadow(0 0 22px rgba(62, 230, 255, .18)); }
+
+.say {
+  position: fixed; left: 0; top: 0; width: 340px; box-sizing: border-box; z-index: 3;
+  padding: 16px 18px 14px; border-radius: 16px;
+  background: linear-gradient(170deg, rgba(18, 28, 48, .97), rgba(8, 12, 22, .97));
+  border: 1px solid rgba(96, 205, 255, .28);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .04) inset;
+  transition: left .55s cubic-bezier(.3, .8, .3, 1), top .55s cubic-bezier(.3, .8, .3, 1), opacity .25s;
+}
+.say.hidden { opacity: 0; pointer-events: none; }
+.say.pop { animation: pop .35s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes pop { from { transform: scale(.85); opacity: .3; } to { transform: none; opacity: 1; } }
+.step { font-size: 11.5px; letter-spacing: .04em; color: #60cdff; font-weight: 600; text-transform: uppercase; }
+.say h2 { margin: 4px 0 6px; font: 600 19px/1.25 'Segoe UI Variable Display', 'Segoe UI', sans-serif; }
+.say p { margin: 0; color: #c9cfdc; font-size: 14px; line-height: 20px; }
+.say p b { color: #fff; }
+.say kbd {
+  font: 600 12px 'Segoe UI', sans-serif; padding: 1px 6px; border-radius: 4px;
+  background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .18);
+}
+.btns { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+button { font: inherit; border: 0; cursor: pointer; border-radius: 8px; }
+.skip { background: transparent; color: #8f97a8; padding: 6px 4px; font-size: 13px; }
+.skip:hover { color: #fff; }
+.next { background: #60cdff; color: #002233; font-weight: 600; padding: 8px 18px; }
+.next:hover { background: #7dd6ff; }
+.dots { display: flex; gap: 5px; }

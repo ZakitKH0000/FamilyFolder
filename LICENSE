@@ -5,11 +5,15 @@ You may download the Family Folder installer from the official page
 https://github.com/ZakitKH0000/FamilyFolder and use the program free of charge
 on your own computers, for personal and family purposes.
 
+The source code is published on the official page so that anyone can see how
+the program works. You may read it and build it for your own personal study.
+Publishing the code does not grant any other rights to it.
+
 Without the author's prior written permission you may not:
-  • copy, modify, translate, decompile, disassemble or otherwise reverse-engineer
-    the program, except to the extent the law expressly permits it;
-  • distribute, sell, rent, publish or host the program or any modified version
-    of it, under any name;
+  • copy the source code or parts of it into other projects, or modify the
+    program or its code for anything other than personal study;
+  • distribute, sell, rent, publish or host the program, its source code or any
+    modified version of them, under any name;
   • use the Papych character (its name, look and animations), the name
     "Family Folder" / «Общая папка», or the images and texts of the official page
     in other products or materials.
@@ -30,12 +34,15 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE PROGRAM OR ITS USE.
 https://github.com/ZakitKH0000/FamilyFolder и бесплатно пользоваться программой
 на своих компьютерах — для себя и своей семьи.
 
+Исходный код опубликован на официальной странице, чтобы каждый мог посмотреть,
+как устроена программа. Его можно читать и собирать для собственного изучения.
+Публикация кода не даёт на него никаких других прав.
+
 Без письменного разрешения автора нельзя:
-  • копировать, изменять, переводить, декомпилировать, дизассемблировать программу
-    или иным способом восстанавливать её устройство, кроме случаев, прямо
-    разрешённых законом;
+  • копировать исходный код или его части в другие проекты, изменять программу
+    или её код иначе как для собственного изучения;
   • распространять, продавать, сдавать в аренду, публиковать или выкладывать
-    программу или её изменённую версию под любым названием;
+    программу, её исходный код или их изменённые версии под любым названием;
   • использовать персонажа Папыча (имя, облик и анимации), название
     «Общая папка» / "Family Folder", картинки и тексты официальной страницы
     в других продуктах и материалах.

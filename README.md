@@ -96,9 +96,25 @@ Already using Family Folder? Run the new installer over the old one — no need 
 > Thank you for trying it!
 > — **Zakir**
 
+## 🛠️ Source code
+
+The code is open for reading — see how everything works, Papych included (`crates/app/ui/papych.js`).
+
+- `crates/core` — the sync engine (no UI): connections, transfers, family, cloud.
+- `crates/app` — the Windows app (Tauri): the window, the bar at the top, the tour and Papych in plain HTML/CSS/JS (`crates/app/ui`).
+- `crates/core/locales` — translations, `design/` — Papych's design lab and the scenes for these animations.
+
+Build: Windows 10/11, Rust (stable, MSVC) and Node.js.
+
+```powershell
+npm install
+cargo test -p obshaya-core                     # engine tests (needs internet, ~2 min)
+cd crates\app; npx --prefix ..\.. tauri build  # installer → target\release\bundle\nsis
+```
+
 ## 📄 License
 
-Free to download and use. © 2026 Zakir. All rights reserved — the source code is closed, and the app and the Papych character may not be copied, modified or redistributed without permission. See [LICENSE](LICENSE). Open-source components used in the app: [THIRD_PARTY.md](THIRD_PARTY.md).
+Free to download and use. © 2026 Zakir. All rights reserved: the source code is published for reading and personal study, but the app, its code and the Papych character may not be copied into other projects or redistributed, modified or not, without permission. See [LICENSE](LICENSE). Open-source components used in the app: [THIRD_PARTY.md](THIRD_PARTY.md).
 
 ---
 
@@ -180,6 +196,13 @@ Free to download and use. © 2026 Zakir. All rights reserved — the source code
 > Спасибо, что попробовали!
 > — **Закир**
 
+### 🛠️ Исходный код
+
+Код открыт для чтения — можно посмотреть, как всё устроено, и Папыча тоже (`crates/app/ui/papych.js`).
+`crates/core` — «двигатель» без окна, `crates/app` — программа для Windows (Tauri, окно, шторка, экскурсия и Папыч на HTML/CSS/JS),
+`crates/core/locales` — переводы, `design/` — мастерская облика Папыча и сценки для этих анимаций.
+Сборка: Windows 10/11, Rust (stable, MSVC) и Node.js — команды выше, в английской части.
+
 ### 📄 Лицензия
 
-Скачивать и пользоваться — бесплатно. © 2026 Закир, все права защищены: исходный код закрыт, копировать, изменять и распространять программу и персонажа Папыча без разрешения нельзя. Подробно — в [LICENSE](LICENSE), открытые компоненты программы — в [THIRD_PARTY.md](THIRD_PARTY.md).
+Скачивать и пользоваться — бесплатно. © 2026 Закир, все права защищены: исходный код открыт для чтения и изучения, но копировать его в другие проекты и распространять программу, её код и персонажа Папыча — в том числе изменёнными — без разрешения нельзя. Подробно — в [LICENSE](LICENSE), открытые компоненты программы — в [THIRD_PARTY.md](THIRD_PARTY.md).

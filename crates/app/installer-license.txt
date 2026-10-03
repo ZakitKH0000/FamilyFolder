@@ -1,0 +1,40 @@
+﻿FAMILY FOLDER — TERMS OF USE AND PRIVACY
+(Русский текст — ниже)
+
+Family Folder is free software, provided "as is", without warranty of any kind. © 2026 Zakir. All rights reserved:
+copying, modifying, decompiling or redistributing the app or the Papych character without the author's permission is not allowed.
+
+Terms
+- The developer is not liable for loss or damage of data, interruptions, internet or cloud costs, or any direct or indirect damage arising from use of the app.
+- You are responsible for what you share and for respecting the law and other people's rights, including copyright.
+- Don't keep important files in a single copy — make backups.
+- Third-party services (iroh servers, Yandex Disk, WebDAV servers, cloud drives) follow their own rules; the developer is not responsible for them.
+
+Privacy
+- The app does not collect information about you or send it anywhere. It has no server of its own, no accounts, no ads and no analytics.
+- Files travel directly between your family's computers over an encrypted connection (QUIC, TLS 1.3). To find each other, computers use public servers of the iroh project (n0); if a direct connection isn't possible, encrypted data goes through their relays. These servers see device keys and IP addresses, but not file contents.
+- A cloud is used only if you connect one, with your own account. Files are encrypted before upload and removed from the cloud once received.
+- Settings, keys and the activity log are stored only on your computer (%APPDATA%\ObshayaPapka).
+
+By installing and using the app, you agree to these terms.
+
+--------------------------------------------------------------------------------
+
+ОБЩАЯ ПАПКА — УСЛОВИЯ ИСПОЛЬЗОВАНИЯ И КОНФИДЕНЦИАЛЬНОСТЬ
+
+«Общая папка» — бесплатная программа, предоставляется «как есть», без каких-либо гарантий. © 2026 Закир, все права защищены:
+копировать, изменять, декомпилировать и распространять программу и персонажа Папыча без разрешения автора нельзя.
+
+Условия
+- Разработчик не отвечает за потерю или повреждение данных, перерывы в работе, расходы на интернет и облако, а также за любой прямой или косвенный ущерб от использования программы.
+- Вы сами отвечаете за то, что передаёте, и за соблюдение законов и прав других людей, в том числе авторских.
+- Не храните важные файлы в единственной копии — делайте резервные копии.
+- Сторонние службы (серверы iroh, Яндекс Диск, WebDAV-серверы, облачные диски) работают по своим правилам, разработчик за них не отвечает.
+
+Конфиденциальность
+- Программа не собирает сведения о вас и никуда их не отправляет. У неё нет своего сервера, учётных записей, рекламы и статистики.
+- Файлы передаются напрямую между компьютерами вашей семьи по зашифрованному соединению (QUIC, TLS 1.3). Чтобы компьютеры находили друг друга, используются общедоступные серверы проекта iroh (n0); если прямое соединение невозможно, зашифрованные данные идут через их ретрансляторы. Эти серверы видят ключи устройств и IP-адреса, но не содержимое файлов.
+- Облако используется, только если вы его подключите, и работает с вашей учётной записью. Файлы шифруются перед загрузкой и удаляются из облака после получения.
+- Настройки, ключи и журнал работы хранятся только на вашем компьютере (%APPDATA%\ObshayaPapka).
+
+Устанавливая программу и пользуясь ею, вы соглашаетесь с этими условиями.

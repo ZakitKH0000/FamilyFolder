@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Окно панели и шторка",
+  "windows": ["main", "island", "tour"],
+  "permissions": ["core:default", "core:window:allow-start-dragging"]
+}

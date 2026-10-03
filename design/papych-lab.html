@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Папыч — выбор облика</title>
+<style>
+  :root {
+    --bg: #f3f3f3; --card: #fff; --text: #1b1b1b; --muted: #5f5f5f; --line: #e3e3e3;
+    --accent: #005fb8; --hover: #f5f5f5; --island: #161618;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #202020; --card: #2b2b2b; --text: #f3f3f3; --muted: #a8a8a8; --line: #3a3a3a; --accent: #60cdff; --hover: #333; --island: #0e0e10; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif; }
+  header { padding: 22px 28px 4px; }
+  h1 { font: 600 26px/1.2 'Segoe UI Variable Display', 'Segoe UI', sans-serif; margin: 0 0 6px; }
+  .hint { color: var(--muted); max-width: 980px; margin: 0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; padding: 16px 28px 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .stage { width: 100%; height: 290px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; }
+  .stage .papych { width: 270px; }
+  .name { font: 600 17px 'Segoe UI Variable Display', 'Segoe UI', sans-serif; }
+  .desc { color: var(--muted); text-align: center; font-size: 13px; min-height: 38px; max-width: 330px; }
+  .minis { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; margin-top: 6px; }
+  .island { display: flex; align-items: center; gap: 10px; background: var(--island); color: #f2f2f2; border-radius: 0 0 22px 22px; padding: 4px 18px 8px 10px; font-size: 13px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .island .papych { width: 62px; }
+  .island b { font-weight: 600; }
+  .titlebar { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 330px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font-size: 12px; background: var(--bg); }
+  .titlebar .papych { width: 34px; }
+  .cap { color: var(--muted); font-size: 12px; }
+  .controls { padding: 8px 28px 30px; display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .row > span:first-child { width: 150px; color: var(--muted); }
+  button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--text); cursor: pointer; }
+  button:hover { background: var(--hover); }
+  button.on { background: var(--accent); color: #fff; border-color: transparent; }
+  @media (prefers-color-scheme: dark) { button.on { color: #000; } }
+  .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .file { padding: 6px 12px; border: 1px dashed var(--muted); border-radius: 8px; cursor: grab; user-select: none; background: var(--card); }
+  .file:active { cursor: grabbing; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Папыч — выбор облика</h1>
+  <p class="hint">Подвигай мышкой: Папыч следит за курсором. Наведи на него, кликни, кликни быстро 3 раза, потом 5 раз.
+    Перетащи любой файл из Проводника (или пример ниже) на Папыча — он его проглотит и «отправит».
+    Файлы никуда не отправляются, это только показ. Если долго не трогать мышку, он зевнёт и уснёт.</p>
+</header>
+<section class="cards" id="cards"></section>
+<section class="controls">
+  <div class="row" id="scenes"><span>Сценки</span></div>
+  <div class="row" id="toggles"><span>Состояния</span></div>
+  <div class="row" id="family"><span>Цвет члена семьи</span></div>
+  <div class="row" id="files"><span>Файлы для пробы</span></div>
+</section>
+<script src="/papych.js"></script>
+<script>
+  const VARIANTS = [
+    ['classic', 'А · «Классика»', 'Тёплая жёлтая папка, как в Проводнике: листы и фото внутри, скрепка, большие мультяшные глаза.'],
+    ['plush', 'Б · «Плюшевый»', 'Мягкий и круглый, как игрушка: строчка-шов по краю, хохолок, глаза-бусинки с бликами.'],
+    ['robot', 'В · «Робо-папка»', 'Папка-робот: лицо на экране, светящиеся глаза, антенна и заклёпки.'],
+  ];
+  const FAMILY = [['Свой', null, '#1f7ae0'], ['Брат', 205, null], ['Мама', 335, null], ['Папа', 140, null], ['Сестра', 275, null]];
+  const big = [], everyone = [];
+  const h = (tag, cls, parent, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; parent?.appendChild(e); return e; };
+
+  for (const [variant, name, desc] of VARIANTS) {
+    const card = h('div', 'card', cards);
+    const stage = h('div', 'stage', card);
+    const p = new Papych(stage, { variant });
+    big.push(p); everyone.push(p);
+    h('div', 'name', card, name);
+    h('div', 'desc', card, desc);
+    const minis = h('div', 'minis', card);
+    const island = h('div', 'island', minis);
+    everyone.push(new Papych(h('div', null, island), { variant, crop: true }));
+    const txt = h('div', null, island);
+    txt.innerHTML = '<b>Брат</b> прислал фото_дачи.jpg';
+    h('div', 'cap', minis, 'так в шторке сверху экрана');
+    const bar = h('div', 'titlebar', minis);
+    everyone.push(new Papych(h('div', null, bar), { variant, crop: true }));
+    h('span', null, bar, 'Общая папка');
+    h('div', 'cap', minis, 'так в заголовке окна');
+  }
+
+  let planeColor = '#1f7ae0';
+  const SCENES = [
+    ['Проглотить и отправить', p => p.swallow({ name: 'фото_дачи.jpg' }, { color: planeColor })],
+    ['Пришёл файл', p => p.receive({ name: 'видео_свадьба.mp4' })],
+    ['Большой файл', p => p.heavy('12 ГБ')],
+    ['Новое устройство', p => p.hello()],
+    ['Обновление', p => p.update()],
+    ['Ошибка', p => p.error()],
+    ['Зевнуть', p => p.yawn()],
+    ['Чихнуть', p => p.sneeze()],
+    ['Голова кругом', p => p.dizzy()],
+  ];
+  for (const [label, fn] of SCENES) h('button', null, scenes, label).onclick = () => everyone.forEach(fn);
+
+  for (const [label, method] of [['Пауза — спит в колпаке', 'pause'], ['Нет связи', 'offline']]) {
+    const b = h('button', null, toggles, label);
+    b.onclick = () => { const on = b.classList.toggle('on'); everyone.forEach(p => p[method](on)); };
+  }
+
+  FAMILY.forEach(([label, hue, color], i) => {
+    const b = h('button', i ? null : 'on', family);
+    const dot = h('span', 'dot', b);
+    dot.style.background = color || `hsl(${hue},80%,55%)`;
+    b.append(label);
+    b.onclick = () => {
+      family.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+      planeColor = color || `hsl(${hue},80%,50%)`;
+      everyone.forEach(p => p.setHue(hue));
+    };
+  });
+
+  for (const name of ['фото_дачи.jpg', 'отчёт.pdf', 'видео.mp4', 'музыка.mp3', 'игра.zip']) {
+    const f = h('span', 'file', files, name);
+    f.draggable = true;
+    f.ondragstart = e => { e.dataTransfer.setData('text/plain', name); e.dataTransfer.effectAllowed = 'copy'; };
+  }
+
+  // Перетаскивание: все тянутся ко рту, глотает ближайший.
+  const nearest = (x, y) => big.reduce((best, p) => {
+    const [mx, my] = p.mouthPoint(), d = Math.hypot(mx - x, my - y);
+    return !best || d < best.d ? { p, d } : best;
+  }, null).p;
+  addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; big.forEach(p => p.dragOver(e.clientX, e.clientY)); });
+  addEventListener('dragleave', e => { if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= innerWidth || e.clientY >= innerHeight) big.forEach(p => p.dragEnd()); });
+  addEventListener('drop', e => {
+    e.preventDefault();
+    const fl = e.dataTransfer.files;
+    const file = fl.length ? { name: fl[0].name, count: fl.length } : { name: e.dataTransfer.getData('text/plain') || 'файл' };
+    const p = nearest(e.clientX, e.clientY);
+    const [mx, my] = p.mouthPoint();
+    big.forEach(o => { if (o !== p) { o.dragEnd(); o.glanceAt(mx, my, 1.6); } });
+    p.swallow(file, { from: [e.clientX, e.clientY], color: planeColor });
+  });
+</script>
+</body>
+</html>

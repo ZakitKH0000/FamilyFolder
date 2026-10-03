@@ -1,0 +1,7 @@
+/target
+/dist
+*.part
+node_modules/
+crates/app/gen/
+/.keys
+/showcase

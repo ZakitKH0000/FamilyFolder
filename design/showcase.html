@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Showcase</title>
+<!-- Сценки для страницы на GitHub: снимает их scripts/showcase.js (см. scripts/showcase.ps1).
+     ?hero — Папыч отправляет файл брату, ?moods — характер, ?shade — шторка, ?tour — экскурсия. -->
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; color: #e8ecf5; }
+  body { background: #070d1b; }
+  .papych { overflow: visible; display: block; }
+  .scene { position: absolute; inset: 0; }
+
+  /* Обои рабочего стола — синие «лепестки», как в Windows 11. */
+  .wall {
+    background:
+      radial-gradient(60% 70% at 78% 95%, rgba(64, 156, 255, .85), transparent 70%),
+      radial-gradient(45% 60% at 22% 105%, rgba(28, 92, 210, .9), transparent 70%),
+      radial-gradient(70% 60% at 50% -20%, rgba(70, 60, 170, .55), transparent 70%),
+      linear-gradient(170deg, #08132e 0%, #0b2558 55%, #0f3f8f 100%);
+  }
+
+  /* ---------- hero ---------- */
+  #hero { background:
+      radial-gradient(55% 75% at 26% 62%, rgba(36, 120, 220, .32), transparent 70%),
+      radial-gradient(40% 60% at 80% 60%, rgba(255, 120, 190, .16), transparent 70%),
+      linear-gradient(160deg, #0a1730 0%, #070d1b 100%); }
+  .dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px); background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(70% 80% at 50% 50%, #000, transparent); mask-image: radial-gradient(70% 80% at 50% 50%, #000, transparent); }
+  .who { position: absolute; bottom: 26px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .who.you { left: 54px; }
+  .who.you .bot { width: 300px; }
+  .who.bro { right: 64px; }
+  .who.bro .bot { width: 190px; }
+  .tag { font-size: 14px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; gap: 7px; }
+  .tag i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+
+  /* ---------- moods ---------- */
+  #moods { background: linear-gradient(160deg, #0a1730 0%, #070d1b 100%); display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); padding: 10px 14px; gap: 0; }
+  .cell { overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 12px; gap: 4px; }
+  .cell .bot { width: 168px; }
+  .cell b { font-size: 14px; font-weight: 600; color: #c9d3e6; }
+
+  /* ---------- shade / tour ---------- */
+  /* color-scheme рамки не задавать: иначе браузер подкладывает под прозрачную страницу белый фон. */
+  iframe { position: absolute; border: 0; background: transparent; }
+  .win { border-radius: 8px; box-shadow: 0 0 0 1px rgba(255,255,255,.09), 0 18px 50px rgba(0,0,0,.55); }
+  .icon { position: absolute; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+  .thumb { width: 64px; height: 50px; border-radius: 4px; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4);
+    background: radial-gradient(14px 14px at 74% 30%, #ffe48a 40%, transparent 46%), radial-gradient(60% 60% at 30% 110%, #3f9b52 60%, transparent 62%), radial-gradient(70% 60% at 85% 120%, #2f7d42 60%, transparent 62%), linear-gradient(#5fb2ff, #bfe3ff); }
+  .ghost { position: absolute; opacity: .75; pointer-events: none; transform: translate(-30px, -22px); display: none; }
+  .cursor { position: absolute; width: 22px; height: 30px; pointer-events: none; z-index: 10; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+  .taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; background: rgba(20, 26, 40, .82); border-top: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .taskbar i { width: 26px; height: 26px; border-radius: 6px; background: rgba(255,255,255,.14); display: block; }
+  .taskbar i.app { background: linear-gradient(135deg, #3ee6ff, #1f7ae0); }
+</style>
+</head>
+<body>
+<script src="/papych.js"></script>
+<script>
+'use strict';
+const q = new URLSearchParams(location.search);
+const scene = ['hero', 'moods', 'shade', 'tour'].find(s => q.has(s)) || 'hero';
+const sleep = s => new Promise(r => setTimeout(r, s * 1000));
+const h = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent || document.body).append(e); return e; };
+const ease = k => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2);
+const done = () => { window.__done = true; };
+let go = async () => {};
+window.__go = () => go();
+
+// Плавно ведёт точку из a в b за dur секунд, на каждом кадре вызывает fn(x, y).
+function glide(a, b, dur, fn, curve = 0) {
+  return new Promise(res => {
+    const t0 = performance.now();
+    const step = () => {
+      const k = Math.min(1, (performance.now() - t0) / (dur * 1000)), e = ease(k);
+      const x = a[0] + (b[0] - a[0]) * e, y = a[1] + (b[1] - a[1]) * e - Math.sin(k * Math.PI) * curve;
+      fn(x, y);
+      if (k < 1) requestAnimationFrame(step); else res();
+    };
+    step();
+  });
+}
+
+const CURSOR = '<svg viewBox="0 0 14 21"><path d="M1 1 L1 17 L5 13.3 L7.9 19.6 L10.6 18.4 L7.8 12.3 L13 12.3 Z" fill="#fff" stroke="#000" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+
+if (scene === 'hero') {
+  const root = h('div', 'scene', null); root.id = 'hero';
+  h('div', 'dots', root);
+  const you = h('div', 'who you', root), bro = h('div', 'who bro', root);
+  const big = new Papych(h('div', 'bot', you), { variant: 'robot' });
+  window.big = big;
+  h('div', 'tag', you, '<i style="background:#3ee6ff"></i>You');
+  const hue = Papych.hueOf('b'), color = Papych.colorOf('b');
+  const small = new Papych(h('div', 'bot', bro), { variant: 'robot', hue });
+  h('div', 'tag', bro, `<i style="background:${color}"></i>Brother`);
+  go = async () => {
+    // Глаза следят за «курсором», который прогуливается по сцене.
+    const path = [[640, 60], [420, 90], [250, 120], [140, 300], [380, 330], [560, 200]];
+    for (let i = 1; i < path.length; i++) await glide(path[i - 1], path[i], 0.32, (x, y) => Papych.cursor(x, y));
+    big.hello(); small.wave(1.6);
+    await sleep(2.2);
+    big.swallow({ name: 'photo.jpg' }, { from: [70, 40], launch: color });
+    await sleep(3.25);   // самолётик долетел
+    small.receive({ name: 'photo.jpg' });
+    await sleep(3.0);
+    big.wave(1.4); small.done();
+    await sleep(1.8);
+    done();
+  };
+}
+
+if (scene === 'moods') {
+  const root = h('div', 'scene', null); root.id = 'moods';
+  const cells = [
+    ['Hello!', p => p.hello(), 3.2],
+    ['Achoo!', p => p.sneeze(), 3.2],
+    ['Dizzy', p => p.dizzy(), 3.2],
+    ['Heavy file', p => p.heavy('12 GB'), 3.2],
+    ['On pause', p => p.pause(true), 0],
+    ['No connection', p => p.offline(true), 0],
+  ];
+  const bots = cells.map(([label]) => {
+    const c = h('div', 'cell', root);
+    const p = new Papych(h('div', 'bot', c), { variant: 'robot' });
+    h('b', null, c, label);
+    return p;
+  });
+  go = async () => {
+    cells.forEach(([, fn, every], i) => {
+      setTimeout(() => { fn(bots[i]); if (every) setInterval(() => fn(bots[i]), every * 1000); }, 150 + i * 120);
+    });
+    await sleep(6.6);
+    done();
+  };
+}
+
+if (scene === 'shade') {
+  const root = h('div', 'scene wall', null);
+  const W = innerWidth, IW = 480, IH = 270, IX = (W - IW) / 2;
+  const icon = h('div', 'icon', root, '<div class="thumb"></div><span>Summer.jpg</span>');
+  icon.style.left = '120px'; icon.style.top = '250px';
+  const ghost = h('div', 'ghost', root, '<div class="thumb"></div>');
+  h('div', 'taskbar', root, '<i></i><i></i><i class="app"></i><i></i><i></i>');
+  const frame = h('iframe', null, root);
+  // Окно шторки появляется, когда файл дотащили к верху экрана (как в программе).
+  Object.assign(frame.style, { left: IX + 'px', top: 0, width: IW + 'px', height: IH + 'px', visibility: 'hidden' });
+  frame.src = '/island.html?lang=en&manual';
+  const cur = h('div', 'cursor', root, CURSOR);
+  let pos = [520, 400], down = false;
+  const put = (x, y) => {
+    pos = [x, y];
+    cur.style.left = x + 'px'; cur.style.top = y + 'px';
+    ghost.style.left = x + 'px'; ghost.style.top = y + 'px';
+    const w = frame.contentWindow, lx = x - IX, ly = y;
+    if (!w || !w.__emit) return;
+    w.__emit('island-cursor', [lx, ly, down]);
+    if (down && lx > 0 && lx < IW && ly < IH) frame.style.visibility = 'visible';
+    if (down && lx > 0 && lx < IW && ly < IH) w.__drag({ type: 'over', position: { x: lx * 2, y: ly * 2 } });
+  };
+  put(...pos);
+  const center = sel => {
+    const r = frame.contentDocument.querySelector(sel).getBoundingClientRect();
+    return [IX + r.left + r.width / 2, r.top + r.height * 0.55];
+  };
+  go = async () => {
+    await sleep(0.3);
+    await glide(pos, [160, 285], 0.8, put);
+    down = true; ghost.style.display = 'block';
+    await sleep(0.25);
+    await glide(pos, [IX + 110, 150], 1.15, put, 40);
+    await sleep(0.35);
+    await glide(pos, center('#family .member'), 0.55, put);
+    await sleep(1.1);
+    await glide(pos, center('#bot'), 0.6, put);
+    await sleep(0.7);
+    down = false; ghost.style.display = 'none';
+    frame.contentWindow.__drag({ type: 'drop', paths: ['C:\\Users\\Zakir\\Desktop\\Summer.jpg'], position: { x: (pos[0] - IX) * 2, y: pos[1] * 2 } });
+    await sleep(0.4);
+    glide(pos, [pos[0] + 150, 330], 1.4, put);
+    await sleep(4.6);
+    done();
+  };
+}
+
+if (scene === 'tour') {
+  const root = h('div', 'scene wall', null);
+  const W = innerWidth, M = [W - 400, 50, 380, 620];
+  h('div', 'taskbar', root, '<i></i><i></i><i class="app"></i><i></i><i></i>');
+  const main = h('iframe', 'win', root);
+  Object.assign(main.style, { left: M[0] + 'px', top: M[1] + 'px', width: M[2] + 'px', height: M[3] + 'px' });
+  main.src = '/index.html?lang=en';
+  const isl = h('iframe', null, root);
+  Object.assign(isl.style, { left: (W - 480) / 2 + 'px', top: 0, width: '480px', height: '270px' });
+  isl.src = '/island.html?lang=en&manual';
+  const steps = (q.get('steps') || '5.2,5.2,5.6,5').split(',').map(Number);
+  go = async () => {
+    const tour = h('iframe', null, root);
+    Object.assign(tour.style, { left: 0, top: 0, width: '100%', height: '100%', zIndex: 5 });
+    tour.src = `/tour.html?lang=en&main=${M.join(',')}`;
+    await new Promise(r => (tour.onload = r));
+    const T = tour.contentWindow.__TAURI__, base = T.core.invoke;
+    T.core.invoke = async (cmd, args) => {
+      if (cmd === 'island_demo') { isl.contentWindow.__emit('island-open', { reason: 'demo', data: { kind: args.kind } }); return null; }
+      return base(cmd, args);
+    };
+    main.contentWindow.__emit('tour', true);
+    for (const s of steps) {
+      await sleep(s);
+      tour.contentDocument.querySelector('#next').click();
+    }
+    await sleep(1.2);
+    done();
+  };
+}
+</script>
+</body>
+</html>
