@@ -62,7 +62,7 @@
 <script>
 'use strict';
 const q = new URLSearchParams(location.search);
-const scene = ['hero', 'moods', 'shade', 'tour'].find(s => q.has(s)) || 'hero';
+const scene = ['hero', 'moods', 'shade', 'tour', 'poster'].find(s => q.has(s)) || 'hero';
 const sleep = s => new Promise(r => setTimeout(r, s * 1000));
 const h = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent || document.body).append(e); return e; };
 const ease = k => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2);
@@ -110,6 +110,22 @@ if (scene === 'hero') {
     await sleep(1.8);
     done();
   };
+}
+
+// Обложки для Microsoft Store (постер 9:16 и квадрат 1:1): Папыч и название.
+if (scene === 'poster') {
+  const root = h('div', 'scene', null); root.id = 'hero';
+  h('div', 'dots', root);
+  const tall = innerHeight > innerWidth;
+  Object.assign(root.style, { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: tall ? '40px' : '24px' });
+  const title = h('div', null, root, 'Family Folder');
+  Object.assign(title.style, { fontSize: tall ? '74px' : '78px', fontWeight: 700, letterSpacing: '-1px', color: '#fff', textShadow: '0 4px 24px rgba(62,230,255,.25)' });
+  const host = h('div', null, root);
+  host.style.width = (tall ? 600 : 560) + 'px';
+  const p = new Papych(host, { variant: 'robot' });
+  const sub = h('div', null, root, q.has('ru') ? 'Файлы для всей семьи' : 'Files for the whole family');
+  Object.assign(sub.style, { fontSize: '30px', color: '#9fb3d6', fontWeight: 500 });
+  go = async () => { p.expr('happy'); Papych.cursor(innerWidth / 2, innerHeight * 0.75); };
 }
 
 if (scene === 'moods') {

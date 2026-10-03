@@ -9,7 +9,9 @@
 Put a photo in the folder and it pops up on your brother's PC a moment later.<br>
 Carrying it there is **Papych** — a little robot folder with a big personality.
 
-<a href="https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe"><img src="https://img.shields.io/badge/Download_for_Windows-v1.4.3-1f7ae0?style=for-the-badge" alt="Download for Windows" height="38"></a>
+<a href="https://apps.microsoft.com/detail/9NX8CF7SNKBF"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft Store" height="56"></a>
+&nbsp;&nbsp;
+<a href="https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe"><img src="https://img.shields.io/badge/Download_installer-v1.4.3-1f7ae0?style=for-the-badge" alt="Download the installer" height="38"></a>
 
 <sub>Windows 10 / 11 · 64-bit · free · 9 languages · <a href="https://github.com/ZakitKH0000/FamilyFolder/releases">all versions</a></sub>
 
@@ -79,11 +81,13 @@ After you install or update the app, Papych **jumps out of the window** and walk
 
 ## ⬇️ Install
 
-1. Download **[FamilyFolder-1.4.3-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe)** (Windows 10 / 11, 64-bit, 7 MB).
-2. Run it. Windows may say *“Windows protected your PC”* — the installer isn't signed with a paid certificate yet. Click **More info → Run anyway**.
-3. On the first computer open **Settings → Invite a device** and send the code to your relative. On their computer, choose **I have a code**. That's it!
+**Recommended: [Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF).** One click to install, updates arrive automatically, and Windows shows no warnings.
 
-Already using Family Folder? Run the new installer over the old one — no need to uninstall. Or just wait: it updates itself from your family.
+Or use the installer: download **[FamilyFolder-1.4.3-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe)** (Windows 10 / 11, 64-bit, 7 MB) and run it. Windows may say *“Windows protected your PC”* — the installer isn't signed with a paid certificate yet; click **More info → Run anyway**. Installed this way, the app updates itself from your family.
+
+Pick one of the two — there's no need for both on the same computer.
+
+Then, on the first computer, open **Settings → Invite a device** and send the code to your relative. On their computer, choose **I have a code**. That's it!
 
 ## 💬 From the author
 
@@ -129,7 +133,7 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 **Общая папка для всей семьи — напрямую с компьютера на компьютер, через интернет, без облака посередине.**
 Положили фото в папку — и через мгновение оно уже на компьютере брата. А доставляет его **Папыч** — маленький робот-папка с большим характером.
 
-**[⬇️ Скачать для Windows — версия 1.4.3](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe)** · Windows 10 / 11 · бесплатно · 9 языков
+**[⬇️ Установить из Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF)** · [установщик 1.4.3](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe) · Windows 10 / 11 · бесплатно · 9 языков
 
 ### ✨ Что умеет
 
@@ -179,11 +183,13 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 
 ### ⬇️ Установка
 
-1. Скачайте **[FamilyFolder-1.4.3-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe)** (Windows 10 / 11, 64 бита, 7 МБ).
-2. Запустите. Windows может показать *«Система Windows защитила ваш компьютер»* — у установщика пока нет платной подписи. Нажмите **«Подробнее» → «Выполнить в любом случае»**.
-3. На первом компьютере откройте **Настройки → Пригласить устройство** и отправьте код родным. На их компьютере выберите **«У меня есть код»**. Готово!
+**Лучше всего — из [Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF).** Установка в один щелчок, обновления приходят сами, Windows ни о чём не предупреждает.
 
-Уже пользуетесь? Запустите новый установщик поверх старого — удалять ничего не нужно. Или просто подождите: программа обновится сама от родных.
+Или установщиком: скачайте **[FamilyFolder-1.4.3-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe)** (Windows 10 / 11, 64 бита, 7 МБ) и запустите. Windows может показать *«Система Windows защитила ваш компьютер»* — у установщика пока нет платной подписи; нажмите **«Подробнее» → «Выполнить в любом случае»**. Так установленная программа обновляется сама от родных.
+
+Выберите что-то одно — на одном компьютере нужен только один способ.
+
+Потом на первом компьютере откройте **Настройки → Пригласить устройство** и отправьте код родным. На их компьютере выберите **«У меня есть код»**. Готово!
 
 ### 💬 От автора
 
