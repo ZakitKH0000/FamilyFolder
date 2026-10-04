@@ -30,7 +30,7 @@ use crate::AppState;
 pub const LABEL: &str = "island";
 /// Размер окна шторки (логические пиксели): с запасом на самую большую шторку и тень.
 const WIDTH: f64 = 480.0;
-const HEIGHT: f64 = 270.0;
+const HEIGHT: f64 = 360.0;
 
 static OPEN: AtomicBool = AtomicBool::new(false);
 /// Страница шторки загрузилась; до этого события копятся в PENDING.
@@ -51,9 +51,12 @@ pub fn create(app: &AppHandle, data_dir: &Path) -> tauri::Result<()> {
         // Не забирать фокус у программы, в которой человек работает.
         .focused(false)
         .focusable(false)
+        // Свой OLE-приёмник на родительском HWND и WebView: одинаковый знак копирования
+        // на всей видимой шторке, в том числе при появлении окна во время перетаскивания.
+        .disable_drag_drop_handler()
         .data_directory(data_dir.join("webview"))
         .build()?;
-    let _ = w;
+    crate::drop_target::install(&w)?;
     let app = app.clone();
     let _ = std::thread::Builder::new().name("island".into()).spawn(move || watch(app));
     Ok(())
@@ -113,6 +116,8 @@ pub fn show(app: &AppHandle, reason: &'static str, data: serde_json::Value) {
     if !OPEN.swap(true, Ordering::Relaxed) {
         let _ = win.show();
         let _ = win.set_always_on_top(true);
+        // WebView2 может создать дополнительные HWND при первом показе.
+        let _ = crate::drop_target::install(&win);
     }
     let open = Open { reason, data };
     let mut pending = PENDING.lock().unwrap_or_else(|e| e.into_inner());

@@ -1,4 +1,11 @@
 {
+  "share.question": "Compartilhar seus arquivos anteriores com {name}? Arquivos: {n}.",
+  "share.added_by": "Este dispositivo foi adicionado por {name}.",
+  "share.own_only": "Somente seus arquivos. Arquivos recebidos não são encaminhados sem a permissão do autor. Os arquivos anteriores ficam privados até você concordar.",
+  "share.allow": "Compartilhar",
+  "share.deny": "Não compartilhar",
+  "share.gone": "Este dispositivo não faz mais parte da família.",
+  "share.preparing": "Os arquivos anteriores ainda estão sendo verificados. Tente novamente em breve — seu pedido está salvo.",
   "app.name": "Pasta da família",
   "app.tagline": "Uma pasta que envia sozinha os arquivos entre os computadores da sua família — direto pela internet, sem servidor próprio e de graça.",
   "units": "B|KB|MB|GB|TB",

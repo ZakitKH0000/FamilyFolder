@@ -14,7 +14,8 @@
     offer: { id: '2', from: en ? 'Brother' : 'Брат', title: en ? 'report.docx' : 'отчёт.docx', detail: en ? '245 KB' : '245 КБ', is_update: false, has_exe: false },
     received: { title: en ? 'summer_house.jpg' : 'фото_дачи.jpg', path: '', conflicts: 0 },
     delivered: { title: en ? 'recipes.txt' : 'рецепты.txt', to: en ? 'Brother' : 'Брат' },
-    joined: { name: en ? "Mom's laptop" : 'Ноутбук мамы' },
+    joined: { id: 'm', name: en ? "Mom's laptop" : 'Ноутбук мамы',
+      added_by: en ? 'Brother' : 'Брат', files: q.has('share') ? 12 : 0 },
   };
   const emit = (name, payload) => (listeners[name] || []).forEach(f => f({ payload }));
   window.__emit = emit;

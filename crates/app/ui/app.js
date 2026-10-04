@@ -574,11 +574,23 @@ function render() {
   if (!S.onboarded && view !== 'onboarding') openOnboarding();
   renderStatus();
   renderBanner();
+  renderHistoryShares();
   renderLists();
   renderCloudChip();
   Buddy.update(S);
   if (view === 'settings') renderSettingsDynamic();
   if (view === 'onboarding') renderOnboarding();
+}
+
+function renderHistoryShares() {
+  setHtml($('#history-shares'), (S.history_shares || []).map(r =>
+    `<article class="history-share"><b>${t('toast.joined', { name: r.name })}</b>
+      <p>${t('share.added_by', { name: r.added_by })}</p>
+      <p>${t('share.question', { name: r.name, n: r.files })}</p>
+      <small>${t('share.own_only')}</small>
+      <div class="actions"><button class="btn sm primary" data-act="share-history" data-id="${esc(r.peer_id)}">${t('share.allow')}</button>
+        <button class="btn sm" data-act="keep-private" data-id="${esc(r.peer_id)}">${t('share.deny')}</button></div>
+    </article>`).join(''));
 }
 
 // ---------- Настройки ----------
@@ -924,6 +936,13 @@ async function act(btn) {
     }
     case 'open-url': return run(invoke('open_url', { url: btn.dataset.url }));
     case 'accept': return Buddy.press(btn, () => run(invoke('accept', { id })).catch(() => {}));
+    case 'share-history':
+    case 'keep-private': {
+      btn.disabled = true;
+      try { await run(invoke('share_history', { peer: id, allow: btn.dataset.act === 'share-history' })); }
+      finally { btn.disabled = false; }
+      return;
+    }
     case 'decline': Buddy.declined(); return run(invoke('decline', { id }));
     case 'dismiss': return Promise.all(id.split(',').map(i => invoke('dismiss', { id: i })));
     case 'upload':

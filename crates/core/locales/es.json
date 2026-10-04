@@ -1,4 +1,11 @@
 {
+  "share.question": "¿Compartir tus archivos anteriores con {name}? Archivos: {n}.",
+  "share.added_by": "{name} añadió este dispositivo.",
+  "share.own_only": "Solo tus archivos. Los recibidos de otros no se reenvían sin permiso de su autor. Los archivos anteriores no se envían hasta que aceptes.",
+  "share.allow": "Compartir",
+  "share.deny": "No compartir",
+  "share.gone": "Este dispositivo ya no pertenece a la familia.",
+  "share.preparing": "Los archivos anteriores aún se están comprobando. Vuelve a intentarlo en breve; tu solicitud está guardada.",
   "app.name": "Carpeta familiar",
   "app.tagline": "Una carpeta que envía por sí sola los archivos entre los ordenadores de tu familia: directamente por internet, sin servidor propio y gratis.",
   "units": "B|KB|MB|GB|TB",

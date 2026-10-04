@@ -58,6 +58,7 @@ pub(crate) async fn serve(inner: &Arc<Inner>, conn: Connection) -> Result<()> {
     let joiner = conn.remote_id().to_string();
     let (mut send, mut recv) = conn.accept_bi().await?;
     let req: JoinReq = read_msg(&mut recv).await?;
+    crate::sharing::seed_existing(inner);
     let resp = {
         let mut s = inner.st();
         let now = now_ms();
@@ -70,7 +71,7 @@ pub(crate) async fn serve(inner: &Arc<Inner>, conn: Connection) -> Result<()> {
                 invite.used = true;
                 s.group.removed.retain(|r| r != &joiner);
                 let name = if req.name.trim().is_empty() { crate::t!("device.new") } else { req.name.clone() };
-                s.group.merge(&[Member { id: joiner.clone(), name }], &[]);
+                s.group.merge(&[Member { id: joiner.clone(), name, added_by: inner.me.clone() }], &[]);
                 JoinResp::Ok { group: s.group.clone(), cloud: s.cloud.clone().filter(|c| !c.is_local()) }
             }
             None => JoinResp::Error(INVITE_INVALID.into()),
@@ -84,7 +85,7 @@ pub(crate) async fn serve(inner: &Arc<Inner>, conn: Connection) -> Result<()> {
         tracing::info!("новое устройство в семье: {joiner}");
         inner.save_soon();
         inner.broadcast_hello();
-        crate::scan::offer_all_to(inner, &joiner);
+        crate::sharing::queue(inner, &joiner, &inner.me);
         inner.dial_now.notify_one();
         inner.changed();
     }
@@ -122,13 +123,14 @@ pub(crate) async fn join(inner: &Arc<Inner>, code: &str) -> Result<String> {
     conn.close(0u32.into(), b"ok");
     match resp {
         JoinResp::Ok { mut group, cloud } => {
+            crate::sharing::seed_existing(inner);
             let inviter = group.name_of(&id.to_string());
             let others: Vec<String> = {
                 let mut s = inner.st();
                 group.removed.retain(|r| r != &inner.me);
                 match group.members.iter_mut().find(|m| m.id == inner.me) {
                     Some(m) => m.name = name,
-                    None => group.members.push(Member { id: inner.me.clone(), name }),
+                    None => group.members.push(Member { id: inner.me.clone(), name, added_by: id.to_string() }),
                 }
                 s.group = group;
                 if s.cloud.is_none() {
@@ -138,7 +140,7 @@ pub(crate) async fn join(inner: &Arc<Inner>, code: &str) -> Result<String> {
             };
             inner.save_soon();
             for peer in others {
-                crate::scan::offer_all_to(inner, &peer);
+                crate::sharing::queue(inner, &peer, &id.to_string());
             }
             inner.dial_now.notify_one();
             inner.kick_cloud();

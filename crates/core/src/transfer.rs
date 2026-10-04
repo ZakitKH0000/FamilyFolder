@@ -488,7 +488,17 @@ fn apply(inner: &Arc<Inner>, id: &str) -> Result<(Vec<String>, Vec<String>), Str
         }
         let meta = std::fs::metadata(&dest).map_err(|e| e.to_string())?;
         let rel = rel_path(&root, &dest).unwrap_or_default();
-        inner.st().index.insert(
+        let mut state = inner.st();
+        let previous = state.file_access.get(&rel).cloned();
+        let owner = if f.owner.is_empty() { offer.from.clone() } else { f.owner.clone() };
+        let mut audience = if f.audience.is_empty() { vec![offer.from.clone(), inner.me.clone()] }
+            else { f.audience.clone() };
+        if !audience.contains(&inner.me) { audience.push(inner.me.clone()); }
+        // Старые программы и получатели не меняют разрешения, установленные автором.
+        state.file_access.insert(rel.clone(), if f.owner.is_empty() || offer.from != owner {
+            previous.unwrap_or(crate::model::FileAccess { owner, audience })
+        } else { crate::model::FileAccess { owner, audience } });
+        state.index.insert(
             rel.clone(),
             crate::model::IndexEntry { size: meta.len(), mtime: mtime_ms(&meta), hash: f.hash.clone() },
         );

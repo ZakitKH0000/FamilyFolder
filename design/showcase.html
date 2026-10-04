@@ -63,6 +63,8 @@
 'use strict';
 const q = new URLSearchParams(location.search);
 const scene = ['hero', 'moods', 'shade', 'tour', 'poster'].find(s => q.has(s)) || 'hero';
+// ?ru — надписи и окна программы по-русски (для русских площадок).
+const RU = q.has('ru'), LANG = RU ? 'ru' : 'en', FILE = RU ? 'Дача.jpg' : 'Summer.jpg';
 const sleep = s => new Promise(r => setTimeout(r, s * 1000));
 const h = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent || document.body).append(e); return e; };
 const ease = k => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2);
@@ -92,10 +94,10 @@ if (scene === 'hero') {
   const you = h('div', 'who you', root), bro = h('div', 'who bro', root);
   const big = new Papych(h('div', 'bot', you), { variant: 'robot' });
   window.big = big;
-  h('div', 'tag', you, '<i style="background:#3ee6ff"></i>You');
+  h('div', 'tag', you, `<i style="background:#3ee6ff"></i>${RU ? 'Вы' : 'You'}`);
   const hue = Papych.hueOf('b'), color = Papych.colorOf('b');
   const small = new Papych(h('div', 'bot', bro), { variant: 'robot', hue });
-  h('div', 'tag', bro, `<i style="background:${color}"></i>Brother`);
+  h('div', 'tag', bro, `<i style="background:${color}"></i>${RU ? 'Брат' : 'Brother'}`);
   go = async () => {
     // Глаза следят за «курсором», который прогуливается по сцене.
     const path = [[640, 60], [420, 90], [250, 120], [140, 300], [380, 330], [560, 200]];
@@ -131,12 +133,12 @@ if (scene === 'poster') {
 if (scene === 'moods') {
   const root = h('div', 'scene', null); root.id = 'moods';
   const cells = [
-    ['Hello!', p => p.hello(), 3.2],
-    ['Achoo!', p => p.sneeze(), 3.2],
-    ['Dizzy', p => p.dizzy(), 3.2],
-    ['Heavy file', p => p.heavy('12 GB'), 3.2],
-    ['On pause', p => p.pause(true), 0],
-    ['No connection', p => p.offline(true), 0],
+    [RU ? 'Привет!' : 'Hello!', p => p.hello(), 3.2],
+    [RU ? 'Апчхи!' : 'Achoo!', p => p.sneeze(), 3.2],
+    [RU ? 'Закружилась голова' : 'Dizzy', p => p.dizzy(), 3.2],
+    [RU ? 'Тяжёлый файл' : 'Heavy file', p => p.heavy(RU ? '12 ГБ' : '12 GB'), 3.2],
+    [RU ? 'На паузе' : 'On pause', p => p.pause(true), 0],
+    [RU ? 'Нет связи' : 'No connection', p => p.offline(true), 0],
   ];
   const bots = cells.map(([label]) => {
     const c = h('div', 'cell', root);
@@ -156,14 +158,14 @@ if (scene === 'moods') {
 if (scene === 'shade') {
   const root = h('div', 'scene wall', null);
   const W = innerWidth, IW = 480, IH = 270, IX = (W - IW) / 2;
-  const icon = h('div', 'icon', root, '<div class="thumb"></div><span>Summer.jpg</span>');
+  const icon = h('div', 'icon', root, `<div class="thumb"></div><span>${FILE}</span>`);
   icon.style.left = '120px'; icon.style.top = '250px';
   const ghost = h('div', 'ghost', root, '<div class="thumb"></div>');
   h('div', 'taskbar', root, '<i></i><i></i><i class="app"></i><i></i><i></i>');
   const frame = h('iframe', null, root);
   // Окно шторки появляется, когда файл дотащили к верху экрана (как в программе).
   Object.assign(frame.style, { left: IX + 'px', top: 0, width: IW + 'px', height: IH + 'px', visibility: 'hidden' });
-  frame.src = '/island.html?lang=en&manual';
+  frame.src = `/island.html?lang=${LANG}&manual`;
   const cur = h('div', 'cursor', root, CURSOR);
   let pos = [520, 400], down = false;
   const put = (x, y) => {
@@ -193,7 +195,7 @@ if (scene === 'shade') {
     await glide(pos, center('#bot'), 0.6, put);
     await sleep(0.7);
     down = false; ghost.style.display = 'none';
-    frame.contentWindow.__drag({ type: 'drop', paths: ['C:\\Users\\Zakir\\Desktop\\Summer.jpg'], position: { x: (pos[0] - IX) * 2, y: pos[1] * 2 } });
+    frame.contentWindow.__drag({ type: 'drop', paths: ['C:\\Users\\Zakir\\Desktop\\' + FILE], position: { x: (pos[0] - IX) * 2, y: pos[1] * 2 } });
     await sleep(0.4);
     glide(pos, [pos[0] + 150, 330], 1.4, put);
     await sleep(4.6);
@@ -207,15 +209,15 @@ if (scene === 'tour') {
   h('div', 'taskbar', root, '<i></i><i></i><i class="app"></i><i></i><i></i>');
   const main = h('iframe', 'win', root);
   Object.assign(main.style, { left: M[0] + 'px', top: M[1] + 'px', width: M[2] + 'px', height: M[3] + 'px' });
-  main.src = '/index.html?lang=en';
+  main.src = `/index.html?lang=${LANG}`;
   const isl = h('iframe', null, root);
   Object.assign(isl.style, { left: (W - 480) / 2 + 'px', top: 0, width: '480px', height: '270px' });
-  isl.src = '/island.html?lang=en&manual';
+  isl.src = `/island.html?lang=${LANG}&manual`;
   const steps = (q.get('steps') || '5.2,5.2,5.6,5').split(',').map(Number);
   go = async () => {
     const tour = h('iframe', null, root);
     Object.assign(tour.style, { left: 0, top: 0, width: '100%', height: '100%', zIndex: 5 });
-    tour.src = `/tour.html?lang=en&main=${M.join(',')}`;
+    tour.src = `/tour.html?lang=${LANG}&main=${M.join(',')}`;
     await new Promise(r => (tour.onload = r));
     const T = tour.contentWindow.__TAURI__, base = T.core.invoke;
     T.core.invoke = async (cmd, args) => {

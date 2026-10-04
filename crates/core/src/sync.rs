@@ -15,7 +15,7 @@ use crate::engine::{Event, Inner, PeerConn, lock};
 use crate::model::{InState, Incoming, Offer, OutState, Status};
 use crate::proto::{Msg, PAIR_ALPN, STREAM_CONTROL, STREAM_FILE, STREAM_UPDATE, SYNC_ALPN, read_msg, write_msg};
 use crate::util::{fmt_size, now_ms};
-use crate::{pairing, scan, transfer};
+use crate::{pairing, transfer};
 
 pub(crate) async fn accept_loop(inner: Arc<Inner>) {
     while let Some(incoming) = inner.endpoint.accept().await {
@@ -265,6 +265,9 @@ pub(crate) fn send_pending_offers(inner: &Arc<Inner>, peer: &str) {
 fn handle_msg(inner: &Arc<Inner>, peer: &str, msg: Msg) {
     match msg {
         Msg::Hello { name, members, removed, cloud, version, update, paused } => {
+            if members.iter().any(|m| m.id != inner.me && !inner.st().group.is_member(&m.id)) {
+                crate::sharing::seed_existing(inner);
+            }
             lock(&inner.peer_versions).insert(peer.to_string(), version);
             // Теперь известна версия — можно отдать ждущие сообщения.
             crate::notes::flush(inner, peer);
@@ -309,12 +312,6 @@ fn handle_msg(inner: &Arc<Inner>, peer: &str, msg: Msg) {
                     .filter(|m| !before.contains(&m.id) && m.id != inner.me)
                     .map(|m| (m.id.clone(), m.name.clone()))
                     .collect();
-                // О новичках сообщаем, только если семья уже была (не при собственном входе).
-                if before.len() > 1 {
-                    for (_, name) in &new_members {
-                        inner.emit(Event::Joined { name: name.clone() });
-                    }
-                }
                 (changed, new_members)
             };
             if changed {
@@ -324,7 +321,9 @@ fn handle_msg(inner: &Arc<Inner>, peer: &str, msg: Msg) {
                 inner.kick_cloud();
             }
             for (m, _) in new_members {
-                scan::offer_all_to(inner, &m);
+                let added_by = inner.st().group.members.iter().find(|p| p.id == m)
+                    .map(|p| p.added_by.clone()).filter(|p| !p.is_empty()).unwrap_or_else(|| peer.into());
+                crate::sharing::queue(inner, &m, &added_by);
             }
             inner.changed();
         }

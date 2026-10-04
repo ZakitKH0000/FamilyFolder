@@ -1,4 +1,11 @@
 {
+  "share.question": "Share your existing files with {name}? Files: {n}.",
+  "share.added_by": "This device was added by {name}.",
+  "share.own_only": "Only your files. Files received from others are not forwarded without their author’s permission. Existing files stay private until you agree.",
+  "share.allow": "Share",
+  "share.deny": "Don’t share",
+  "share.gone": "This device is no longer in the family.",
+  "share.preparing": "Existing files are still being checked. Please try sharing again shortly — your request is saved.",
   "app.name": "Family Folder",
   "app.tagline": "A folder that delivers files between your family's computers by itself — directly over the internet, with no server of its own, for free.",
   "units": "B|KB|MB|GB|TB",

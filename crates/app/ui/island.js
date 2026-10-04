@@ -19,6 +19,7 @@ let pass = null;        // прозрачная часть окна пропус
 let dropped = false, releasedAt = 0;
 let members = [];       // мини-Папычи семьи, пока тащат файлы
 let target = null;      // на кого бросят: null — всем
+let dropBounds = '';
 
 const isl = $('#isl');
 const bot = new Papych($('#bot'), { variant: 'robot', crop: true });
@@ -114,9 +115,13 @@ function open(reason, data) {
       break;
     }
     case 'joined':
-      until = now + 6000;
-      head(t('toast.joined', { name: data.name }), t('toast.joined_text'));
-      acts([]);
+      until = now + (data.files ? 15000 : 6000);
+      head(t('toast.joined', { name: data.name }), data.files
+        ? `${t('share.added_by', { name: data.added_by })} ${t('share.question', { name: data.name, n: data.files })}` : t('toast.joined_text'));
+      acts(data.files ? [
+        [t('share.allow'), () => answerHistory(data.id, true), 'primary'],
+        [t('share.deny'), () => answerHistory(data.id, false)],
+      ] : []);
       bot.hello();
       break;
     case 'note': {
@@ -169,6 +174,8 @@ function close() {
   demo = false;
   if (!mode) return;
   mode = null;
+  invoke('island_drop_bounds', { x: 0, y: 0, width: 0, height: 0 });
+  dropBounds = '';
   isl.classList.remove('in');
   setTimeout(() => {
     if (mode) return;
@@ -215,6 +222,8 @@ function renderDrag() {
   for (const p of peers) {
     const el = document.createElement('div');
     el.className = 'member' + (p.online ? '' : ' off');
+    el.title = p.name;
+    el.setAttribute('aria-label', p.name);
     const mb = document.createElement('div');
     mb.className = 'mb';
     const name = document.createElement('span');
@@ -248,6 +257,10 @@ function aim(x, y) {
 
 async function drop(paths, x, y) {
   if (!paths || !paths.length) return close();
+  const r = isl.getBoundingClientRect();
+  if (x < r.left || x > r.right || y < r.top || y > r.bottom) return close();
+  if (mode !== 'drag') open('drag');
+  aim(x, y); // выбор по месту отпускания, а не по последнему событию движения
   dropped = true;
   const hit = members.find(m => m.id === target);
   const who = hit ? hit.p : bot;
@@ -265,6 +278,13 @@ async function drop(paths, x, y) {
   await who.swallow({ name: paths.length === 1 ? baseName(paths[0]) : '', count: paths.length },
     { from: [x, y], launch: hit ? colorOf(hit.id) : '#60cdff' });
   close();
+}
+
+async function answerHistory(peer, allow) {
+  try {
+    await invoke('share_history', { peer, allow });
+    close();
+  } catch (e) { head(esc(String(e)), ''); }
 }
 
 // ---------- новые файлы ----------
@@ -348,6 +368,12 @@ setInterval(() => {
   if (!mode) return;
   if (demo) return setPass(false);
   const r = isl.getBoundingClientRect();
+  const bounds = [r.left, Math.max(0, r.top), r.width, Math.min(r.bottom, innerHeight) - Math.max(0, r.top)];
+  const signature = bounds.map(Math.round).join(',');
+  if (signature !== dropBounds) {
+    dropBounds = signature;
+    invoke('island_drop_bounds', { x: bounds[0], y: bounds[1], width: bounds[2], height: bounds[3] });
+  }
   const inside = cursor.x >= r.left - 12 && cursor.x <= r.right + 12 && cursor.y <= r.bottom + 12;
   const now = Date.now();
   if (mode === 'drag') {
@@ -404,5 +430,6 @@ function onDrag(e) {
     Papych.cursor(x, y);
   });
   T.webview.getCurrentWebview().onDragDropEvent(onDrag);
+  await T.event.listen('island-drag', onDrag);
   for (const o of await invoke('island_ready')) open(o.reason, o.data);
 })();

@@ -28,7 +28,11 @@ fn base(title: &str) -> Toast {
 fn on_action(app: &AppHandle, action: Option<String>) {
     let action = action.unwrap_or_default();
     let engine = app.state::<AppState>().engine.clone();
-    if let Some(id) = action.strip_prefix("accept:") {
+    if let Some(peer) = action.strip_prefix("share:") {
+        if let Err(e) = engine.share_history(peer, true) { simple(&e.to_string(), ""); }
+    } else if let Some(peer) = action.strip_prefix("keep-private:") {
+        let _ = engine.share_history(peer, false);
+    } else if let Some(id) = action.strip_prefix("accept:") {
         if let Err(e) = engine.accept(id) {
             show_panel_tab(app, "in");
             simple(&e.to_string(), "");
@@ -121,10 +125,17 @@ pub fn note(app: &AppHandle, id: &str, from: &str, text: &str, url: Option<&str>
     }
 }
 
-pub fn joined(app: &AppHandle, name: &str) {
+pub fn joined(app: &AppHandle, id: &str, name: &str, added_by: &str, files: usize) {
     let app2 = app.clone();
-    let toast = base(&t!("toast.joined", name = name)).text1(&t!("toast.joined_text")).on_activated(move |_| {
-        on_action(&app2, Some("in".into()));
+    let detail = if files > 0 { t!("share.question", name = name, n = files) } else { t!("toast.joined_text") };
+    let mut toast = base(&t!("toast.joined", name = name))
+        .text1(&t!("share.added_by", name = added_by)).text2(&detail);
+    if files > 0 {
+        toast = toast.add_button(&t!("share.allow"), &format!("share:{id}"))
+            .add_button(&t!("share.deny"), &format!("keep-private:{id}"));
+    }
+    let toast = toast.on_activated(move |action| {
+        on_action(&app2, action);
         Ok(())
     });
     let _ = toast.show();

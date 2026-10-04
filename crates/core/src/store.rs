@@ -33,6 +33,8 @@ pub struct State {
     pub paused_until: i64,
     /// Сообщения семье и от семьи (старые сначала).
     pub notes: Vec<crate::notes::Note>,
+    pub file_access: BTreeMap<String, crate::model::FileAccess>,
+    pub history_shares: Vec<crate::model::HistoryShare>,
 }
 
 pub fn load(path: &Path) -> State {

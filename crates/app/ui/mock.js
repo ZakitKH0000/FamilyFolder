@@ -42,11 +42,12 @@
       ? { connected: true, provider: 'webdav', local: false, url: 'https://app.koofr.net/dav/Koofr', user: 'zakir', login: 'zakir · app.koofr.net', uploading: true, auth_code: null, auth_url: null, error: null, client_id: '', client_secret: '' }
       : { connected: false, provider: '', local: false, url: '', user: '', login: '', uploading: false, auth_code: q.has('auth') ? '4821-7730' : null, auth_url: 'https://ya.ru/device', error: null, client_id: '', client_secret: '' },
     version: '1.4.1',
+    history_shares: q.has('share') ? [{ peer_id: 'm', name: MOM, added_by: BRO, files: 12 }] : [],
     lang: q.get('lang') || 'ru',
     paused_until: q.has('paused') ? now + 3600e3 : 0,
     update: q.has('update') ? '1.2.0' : null,
     notes: empty ? [] : [
-      { id: 'n1', outgoing: false, peer_id: 'b', peer: BRO, text: L('Фото с дачи: https://disk.yandex.ru/d/abc123\nПароль от Wi-Fi на даче: dacha2026', 'Photos from the weekend 📸\nhttps://photos.example.com/weekend'), created_at: now - 5 * 60e3, seen: false, to: [] },
+      { id: 'n1', outgoing: false, peer_id: 'b', peer: BRO, text: L('Фото с выходных на даче 📸\nhttps://photos.example.com/dacha','Photos from the weekend 📸\nhttps://photos.example.com/weekend'), created_at: now - 5 * 60e3, seen: false, to: [] },
       { id: 'n2', outgoing: true, peer_id: '', peer: '', text: L('Купите хлеба по дороге', 'Grab some bread on the way home 🍞'), created_at: now - 3600e3, seen: true, to: [{ id: 'b', name: BRO, delivered: true, needs_update: false }, { id: 'm', name: MOM, delivered: false, needs_update: !en }] },
     ],
   };
@@ -74,6 +75,11 @@
         if (cmd === 'create_invite') return 'MNXG-4ZLB-OJSW-Q2LT-MFZG-K3TB-NFXG-IZLB-OJSW-Q2LT-MFZG-K3TB-NFXG-IZLB-OJSW-Q2LT-MFZG-K3TB-NFXG-IZLB';
         if (cmd === 'join') return BRO;
         if (cmd === 'send_dropped') return args.paths.length;
+        if (cmd === 'share_history') {
+          state.history_shares = state.history_shares.filter(r => r.peer_id !== args.peer);
+          window.__emit('state', state);
+          return null;
+        }
         if (cmd === 'send_note') {
           state.notes.unshift({ id: 'n' + Date.now(), outgoing: true, peer_id: '', peer: '', text: args.text, created_at: Date.now(), seen: true, to: state.peers.filter(p => !args.peers.length || args.peers.includes(p.id)).map(p => ({ id: p.id, name: p.name, delivered: false, needs_update: false })) });
           return null;

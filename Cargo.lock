@@ -3666,7 +3666,7 @@ dependencies = [
 
 [[package]]
 name = "obshaya-app"
-version = "1.4.4"
+version = "1.4.5"
 dependencies = [
  "anyhow",
  "data-encoding",
@@ -3685,12 +3685,13 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "windows",
+ "windows-core",
  "winreg 0.56.0",
 ]
 
 [[package]]
 name = "obshaya-core"
-version = "1.4.4"
+version = "1.4.5"
 dependencies = [
  "anyhow",
  "blake3",

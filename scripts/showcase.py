@@ -1,6 +1,7 @@
 """Картинки для страницы на GitHub из кадров и снимков scripts/showcase.js (нужен Pillow).
 
   python scripts/showcase.py anim <папка кадров> <файл.webp> [--width 1080] [--fps 25] [--start 0] [--end 0] [--quality 80]
+  python scripts/showcase.py gif <папка кадров> <файл.gif> [--width 640] [--fps 12] [--start 0] [--end 0]
   python scripts/showcase.py window <снимок.png> <файл.png> [--radius 16]   скруглить углы, добавить тень
   python scripts/showcase.py row <файл.png> <окно1.png> <окно2.png> ...       окна (уже с тенью) в ряд
 """
@@ -35,6 +36,30 @@ def anim(src, out, rest):
     images[0].save(out, save_all=True, append_images=images[1:], duration=round(1000 / opt['fps']),
                    loop=0, quality=opt['quality'], method=4)
     print(f'{out}: {len(images)} кадров, {os.path.getsize(out) // 1024} КБ')
+
+
+def gif(src, out, rest):
+    """То же для площадок без WebP (Пикабу и т. п.): GIF с общей палитрой — без мерцания фона."""
+    opt = args(rest, width=640, fps=12.0, start=0.0, end=0.0)
+    frames = json.load(open(os.path.join(src, 'frames.json'), encoding='utf-8'))
+    end = opt['end'] or frames[-1]['t']
+    images, j, n = [], 0, int((end - opt['start']) * opt['fps'])
+    for i in range(n):
+        t = opt['start'] + i / opt['fps']
+        while j + 1 < len(frames) and frames[j + 1]['t'] <= t:
+            j += 1
+        img = Image.open(os.path.join(src, frames[j]['name'])).convert('RGB')
+        h = round(img.height * opt['width'] / img.width)
+        images.append(img.resize((opt['width'], h), Image.LANCZOS))
+    # Палитра по нескольким кадрам сразу, одна на всю анимацию.
+    sample = images[:: max(1, len(images) // 8)]
+    sheet = Image.new('RGB', (images[0].width, images[0].height * len(sample)))
+    for k, im in enumerate(sample):
+        sheet.paste(im, (0, k * im.height))
+    pal = sheet.quantize(255, method=Image.Quantize.MEDIANCUT)
+    out_frames = [im.quantize(palette=pal, dither=Image.Dither.NONE) for im in images]
+    out_frames[0].save(out, save_all=True, append_images=out_frames[1:], duration=round(1000 / opt['fps']), loop=0)
+    print(f'{out}: {len(out_frames)} кадров, {os.path.getsize(out) // 1024} КБ')
 
 
 def window(src, out, rest):
@@ -73,6 +98,8 @@ if __name__ == '__main__':
     cmd, *rest = sys.argv[1:]
     if cmd == 'anim':
         anim(rest[0], rest[1], rest[2:])
+    elif cmd == 'gif':
+        gif(rest[0], rest[1], rest[2:])
     elif cmd == 'window':
         window(rest[0], rest[1], rest[2:])
     elif cmd == 'row':

@@ -3,6 +3,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod dock;
+mod drop_target;
 mod island;
 mod menu;
 mod notify;
@@ -53,6 +54,11 @@ fn accept(st: State<AppState>, id: String) -> Res {
 #[tauri::command]
 fn decline(st: State<AppState>, id: String) {
     st.engine.decline(&id);
+}
+
+#[tauri::command]
+fn share_history(st: State<AppState>, peer: String, allow: bool) -> Res {
+    st.engine.share_history(&peer, allow).map_err(err)
 }
 
 #[tauri::command]
@@ -386,13 +392,13 @@ fn pump_events(app: AppHandle, mut rx: tokio::sync::mpsc::UnboundedReceiver<Even
                         notify::delivered(&app, &title, &to)
                     }
                 }
-                Event::Joined { name } => {
+                Event::Joined { id, name, added_by, files } => {
                     let r = island::route(&app);
                     if r.island {
-                        island::show(&app, "joined", json!({ "name": name }));
+                        island::show(&app, "joined", json!({ "id": id, "name": name, "added_by": added_by, "files": files }));
                     }
                     if r.toast {
-                        notify::joined(&app, &name)
+                        notify::joined(&app, &id, &name, &added_by, files)
                     }
                 }
                 Event::Note { id, from, text } => {
@@ -510,6 +516,7 @@ fn main() {
             get_strings,
             accept,
             decline,
+            share_history,
             dismiss,
             upload_now,
             open_path,
@@ -542,6 +549,7 @@ fn main() {
             island::island_close,
             island::island_pass,
             island::island_ready,
+            drop_target::island_drop_bounds,
             island::send_dropped,
             backdrop,
             tour::tour_start,

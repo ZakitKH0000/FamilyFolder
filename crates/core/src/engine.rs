@@ -43,7 +43,10 @@ pub enum Event {
     },
     /// В семью добавилось устройство.
     Joined {
+        id: String,
         name: String,
+        added_by: String,
+        files: usize,
     },
     /// Пришло сообщение (текст, ссылка).
     Note {
@@ -388,8 +391,9 @@ impl Engine {
         let my_name = state.settings.device_name.clone();
         match state.group.members.iter_mut().find(|m| m.id == me) {
             Some(m) => m.name = my_name,
-            None => state.group.members.push(Member { id: me.clone(), name: my_name }),
+            None => state.group.members.push(Member { id: me.clone(), name: my_name, added_by: String::new() }),
         }
+        crate::sharing::migrate(&mut state, &me);
         // Загрузки, прерванные выключением, продолжатся сами.
         for i in &mut state.incoming {
             if i.state == InState::Downloading {
@@ -546,6 +550,11 @@ impl Engine {
         inner.kick.notify_one();
         inner.changed();
         Ok(())
+    }
+
+    /// Разрешить или запретить передачу прежних собственных файлов новому участнику.
+    pub fn share_history(&self, peer: &str, allow: bool) -> Result<()> {
+        crate::sharing::answer(&self.0, peer, allow)
     }
 
     /// «Отклонить» или отмена идущей загрузки.

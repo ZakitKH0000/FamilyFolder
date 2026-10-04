@@ -11,7 +11,7 @@ Carrying it there is **Papych** — a little robot folder with a big personality
 
 <a href="https://apps.microsoft.com/detail/9NX8CF7SNKBF"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft Store" height="56"></a>
 &nbsp;&nbsp;
-<a href="https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe"><img src="https://img.shields.io/badge/Download_installer-v1.4.3-1f7ae0?style=for-the-badge" alt="Download the installer" height="38"></a>
+<a href="https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.5/FamilyFolder-1.4.5-Setup.exe"><img src="https://img.shields.io/badge/Download_installer-v1.4.5-1f7ae0?style=for-the-badge" alt="Download the installer" height="38"></a>
 
 <sub>Windows 10 / 11 · 64-bit · free · 9 languages · <a href="https://github.com/ZakitKH0000/FamilyFolder/releases">all versions</a></sub>
 
@@ -81,9 +81,11 @@ After you install or update the app, Papych **jumps out of the window** and walk
 
 ## ⬇️ Install
 
+**New in [1.4.5](https://github.com/ZakitKH0000/FamilyFolder/releases/tag/v1.4.5):** joining devices no longer receive existing files automatically. Each device is asked whether to share its own previous files. Update every family computer to 1.4.5 or later for these rules to apply throughout the family. This release also revises file dropping onto Papych's bar and recipient selection. The Microsoft Store update is pending.
+
 **Recommended: [Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF).** One click to install, updates arrive automatically, and Windows shows no warnings.
 
-Or use the installer: download **[FamilyFolder-1.4.3-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe)** (Windows 10 / 11, 64-bit, 7 MB) and run it. Windows may say *“Windows protected your PC”* — the installer isn't signed with a paid certificate yet; click **More info → Run anyway**. Installed this way, the app updates itself from your family.
+Or use the installer: download **[FamilyFolder-1.4.5-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.5/FamilyFolder-1.4.5-Setup.exe)** (Windows 10 / 11, 64-bit, 7 MB) and run it. Windows may say *“Windows protected your PC”* — the installer isn't signed with a paid certificate yet; click **More info → Run anyway**. Installed this way, the app updates itself from your family.
 
 Pick one of the two — there's no need for both on the same computer.
 
@@ -133,7 +135,7 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 **Общая папка для всей семьи — напрямую с компьютера на компьютер, через интернет, без облака посередине.**
 Положили фото в папку — и через мгновение оно уже на компьютере брата. А доставляет его **Папыч** — маленький робот-папка с большим характером.
 
-**[⬇️ Установить из Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF)** · [установщик 1.4.3](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe) · Windows 10 / 11 · бесплатно · 9 языков
+**[⬇️ Установить из Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF)** · [установщик 1.4.5](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.5/FamilyFolder-1.4.5-Setup.exe) · Windows 10 / 11 · бесплатно · 9 языков
 
 ### ✨ Что умеет
 
@@ -183,9 +185,11 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 
 ### ⬇️ Установка
 
+**Новое в [1.4.5](https://github.com/ZakitKH0000/FamilyFolder/releases/tag/v1.4.5):** новые устройства больше не получают прежние файлы автоматически. Каждый компьютер спрашивает, делиться ли своими прежними файлами. Для работы этих правил во всей семье обновите все компьютеры до 1.4.5 или новее. Также переработаны приём файлов в шторке Папыча и выбор получателя. Обновление Microsoft Store ещё не опубликовано.
+
 **Лучше всего — из [Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF).** Установка в один щелчок, обновления приходят сами, Windows ни о чём не предупреждает.
 
-Или установщиком: скачайте **[FamilyFolder-1.4.3-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.3/FamilyFolder-1.4.3-Setup.exe)** (Windows 10 / 11, 64 бита, 7 МБ) и запустите. Windows может показать *«Система Windows защитила ваш компьютер»* — у установщика пока нет платной подписи; нажмите **«Подробнее» → «Выполнить в любом случае»**. Так установленная программа обновляется сама от родных.
+Или установщиком: скачайте **[FamilyFolder-1.4.5-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.4.5/FamilyFolder-1.4.5-Setup.exe)** (Windows 10 / 11, 64 бита, 7 МБ) и запустите. Windows может показать *«Система Windows защитила ваш компьютер»* — у установщика пока нет платной подписи; нажмите **«Подробнее» → «Выполнить в любом случае»**. Так установленная программа обновляется сама от родных.
 
 Выберите что-то одно — на одном компьютере нужен только один способ.
 

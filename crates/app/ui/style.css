@@ -487,3 +487,8 @@ button.row:hover { background: var(--card-hover); border-color: var(--stroke-str
 /* На экскурсии Папыч выпрыгнул из окна. */
 .buddy { transition: opacity .3s, transform .3s; }
 .buddy.away { opacity: 0; transform: scale(.4) translateY(-30px); pointer-events: none; }
+/* Согласие на передачу прежних собственных файлов новому участнику. */
+.history-share { margin: 8px 12px; padding: 12px; border-radius: 12px; background: var(--card, rgba(96, 205, 255, .09)); }
+.history-share p { margin: 5px 0; }
+.history-share small { display: block; opacity: .75; }
+.history-share .actions { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }

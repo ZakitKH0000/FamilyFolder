@@ -1,6 +1,6 @@
 //! Слежение за общей папкой: что появилось или изменилось → предложения устройствам семьи.
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::HashSet;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -152,6 +152,10 @@ pub(crate) async fn scan_all(inner: &Arc<Inner>) {
         let mut s = inner.st();
         let root_str = root.to_string_lossy().into_owned();
         if s.index_root != root_str {
+            if !s.index_root.is_empty() {
+                s.file_access.clear();
+                s.history_shares.clear();
+            }
             s.index.clear();
             s.index_root = root_str;
             true
@@ -248,11 +252,16 @@ pub(crate) async fn scan_item(inner: &Arc<Inner>, item: &str, make_offers: bool)
             let prev = {
                 let mut s = inner.st();
                 let prev = s.index.get(rel).map(|e| e.hash.clone());
+                let audience = s.group.active().map(|m| m.id.clone()).collect();
+                let access = s.file_access.entry(rel.clone()).or_insert_with(|| crate::model::FileAccess {
+                    owner: inner.me.clone(), audience,
+                }).clone();
                 s.index.insert(rel.clone(), IndexEntry { size: *size, mtime: *mtime, hash: hash.clone() });
-                prev
+                (prev, access)
             };
-            if prev.as_deref() != Some(hash.as_str()) {
-                changes.push(OfferFile { path: rel.clone(), size: *size, mtime: *mtime, hash, prev_hash: prev });
+            if prev.0.as_deref() != Some(hash.as_str()) {
+                changes.push(OfferFile { path: rel.clone(), size: *size, mtime: *mtime, hash,
+                    prev_hash: prev.0, owner: prev.1.owner, audience: prev.1.audience });
             }
         }
         Ok(())
@@ -303,7 +312,24 @@ pub(crate) fn create_offers(
     {
         let mut s = inner.st();
         for peer in &peers {
-            let mut files = changes.clone();
+            let mut files: Vec<OfferFile> = changes.iter().filter_map(|f| {
+                let access = s.file_access.get_mut(&f.path)?;
+                // Перетаскивание — явное действие автора. Новая копия идёт выбранным людям.
+                if let Some(targets) = &targeted {
+                    if access.owner == inner.me {
+                        if f.prev_hash.is_none() { access.audience = vec![inner.me.clone()]; }
+                        for id in targets {
+                            if !access.audience.contains(id) { access.audience.push(id.clone()); }
+                        }
+                    }
+                }
+                if !access.audience.contains(peer) { return None; }
+                let mut f = f.clone();
+                f.owner = access.owner.clone();
+                f.audience = access.audience.clone();
+                Some(f)
+            }).collect();
+            if files.is_empty() { continue; }
             let mut supersedes = Vec::new();
             for o in s.outgoing.iter_mut().filter(|o| {
                 &o.to == peer
@@ -353,29 +379,6 @@ pub(crate) fn create_offers(
     inner.changed();
 }
 
-/// Новому устройству семьи предлагается всё, что уже лежит в папке.
-pub(crate) fn offer_all_to(inner: &Arc<Inner>, peer: &str) {
-    let root = inner.root();
-    let groups: BTreeMap<String, Vec<OfferFile>> = {
-        let s = inner.st();
-        let mut groups: BTreeMap<String, Vec<OfferFile>> = BTreeMap::new();
-        for (rel, e) in &s.index {
-            groups.entry(top_item(rel).to_string()).or_default().push(OfferFile {
-                path: rel.clone(),
-                size: e.size,
-                mtime: e.mtime,
-                hash: e.hash.clone(),
-                prev_hash: None,
-            });
-        }
-        groups
-    };
-    for (item, files) in groups {
-        let is_folder = root.join(&item).is_dir();
-        create_offers(inner, &item, is_folder, files, Some(peer));
-    }
-}
-
 pub(crate) fn native(root: &Path, rel: &str) -> PathBuf {
     let mut p = root.to_path_buf();
     for part in rel.split('/') {
@@ -385,7 +388,7 @@ pub(crate) fn native(root: &Path, rel: &str) -> PathBuf {
 }
 
 /// Все файлы элемента: (путь, размер, время изменения).
-fn walk(root: &Path, item: &Path) -> Vec<(String, u64, i64)> {
+pub(crate) fn walk(root: &Path, item: &Path) -> Vec<(String, u64, i64)> {
     let mut out = Vec::new();
     let mut stack = vec![item.to_path_buf()];
     while let Some(p) = stack.pop() {

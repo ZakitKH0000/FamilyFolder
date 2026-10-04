@@ -1,4 +1,11 @@
 {
+  "share.question": "要与 {name} 分享您以前的文件吗？文件数：{n}。",
+  "share.added_by": "此设备由 {name} 添加。",
+  "share.own_only": "仅分享您自己的文件。收到的文件未经原作者许可不会转发。您同意之前，以前的文件不会发送。",
+  "share.allow": "分享",
+  "share.deny": "不分享",
+  "share.gone": "此设备已不在家庭中。",
+  "share.preparing": "以前的文件仍在检查中。请稍后再次尝试分享，您的请求已保存。",
   "app.name": "家庭文件夹",
   "app.tagline": "一个能自动在家人的电脑之间传递文件的文件夹——通过互联网直接传输，无需自有服务器，完全免费。",
   "units": "B|KB|MB|GB|TB",

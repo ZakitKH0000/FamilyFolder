@@ -195,6 +195,8 @@ async fn full_flow() {
     println!("10. Третье устройство по коду второго, автоприём");
     let b = start(&db, &fb).await;
     wait_for("связь А и Б", 90, || (online(&a) && online(&b)).then_some(())).await;
+    write(&fb.join("старый файл Б.txt"), b"owned by B");
+    wait_for("старый файл Б предложен А", 60, || find_in(&a, "старый файл Б.txt", "new")).await;
     let (dc, fc): (PathBuf, PathBuf) = (root.join("c-data"), root.join("C Общая"));
     let c = start(&dc, &fc).await;
     rename(&c, "Компьютер В");
@@ -204,6 +206,28 @@ async fn full_flow() {
     let inviter = c.join(&b.create_invite()).await.expect("третье устройство");
     assert_eq!(inviter, "Компьютер Б");
     wait_for("А видит В", 120, || a.snapshot().peers.iter().any(|p| p.name == "Компьютер В" && p.online).then_some(())).await;
+    wait_for("А спрашивают о прежних файлах", 30, || a.snapshot().history_shares.iter()
+        .find(|r| r.peer_id == c.device_id()).cloned()).await;
+    let request_b = wait_for("Б спрашивают о своих прежних файлах", 30, || b.snapshot().history_shares.iter()
+        .find(|r| r.peer_id == c.device_id()).cloned()).await;
+    assert_eq!(request_b.added_by, "Компьютер Б", "показываем, кто пригласил");
+    assert!(c.snapshot().incoming.is_empty(), "новичку не предложили старые файлы даже с автоприёмом");
+    // Перезапуск пригласившего не теряет запрос и не превращает молчание в согласие.
+    b.shutdown().await;
+    let b = start(&db, &fb).await;
+    assert!(b.snapshot().history_shares.iter().any(|r| r.peer_id == c.device_id()));
+    b.share_history(&c.device_id(), true).unwrap();
+    wait_for("В получил разрешённый старый файл Б", 90, || find_in(&c, "старый файл Б.txt", "done")).await;
+    assert_eq!(std::fs::read(fc.join("старый файл Б.txt")).unwrap(), b"owned by B");
+    assert!(c.snapshot().incoming.iter().all(|i| i.item != "фото.jpg"),
+        "согласие Б не пересылает полученные от А файлы");
+    a.share_history(&c.device_id(), false).unwrap();
+    // Изменение старого собственного файла также не обходит отказ для нового устройства.
+    write(&fa.join("фото.jpg"), b"private new revision");
+    wait_for("Б предложена новая версия фото", 90, || find_in(&b, "фото.jpg", "new")).await;
+    assert!(a.snapshot().outgoing.iter().all(|o| o.item != "фото.jpg" || o.peer_id != c.device_id()),
+        "старые файлы и их новые версии не уходят новичку после отказа");
+    assert!(c.snapshot().incoming.iter().all(|i| i.item != "фото.jpg"));
     let note = data(10_000, 5);
     write(&fa.join("для всех.txt"), &note);
     let got = wait_for("В принял сам", 120, || find_in(&c, "для всех.txt", "done")).await;

@@ -30,6 +30,15 @@ pub struct UiState {
     pub update: Option<String>,
     /// Сообщения (новые сначала).
     pub notes: Vec<NoteView>,
+    pub history_shares: Vec<HistoryShareView>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct HistoryShareView {
+    pub peer_id: String,
+    pub name: String,
+    pub added_by: String,
+    pub files: usize,
 }
 
 #[derive(Serialize, Clone)]
@@ -313,6 +322,8 @@ pub(crate) fn build(inner: &Arc<Inner>) -> UiState {
         paused_until: if inner.is_paused() { inner.paused_until.load(std::sync::atomic::Ordering::Relaxed) } else { 0 },
         update: lock(&inner.update_ready).as_ref().map(|u| u.0.clone()),
         notes,
+        history_shares: s.history_shares.iter().filter(|r| s.group.is_member(&r.peer))
+            .map(|r| HistoryShareView { peer_id: r.peer.clone(), name: name_of(&r.peer),
+                added_by: name_of(&r.added_by), files: r.paths.len() }).collect(),
     }
 }
-

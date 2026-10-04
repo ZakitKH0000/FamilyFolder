@@ -1,4 +1,11 @@
 {
+  "share.question": "Ihre bisherigen Dateien mit {name} teilen? Dateien: {n}.",
+  "share.added_by": "Dieses Gerät wurde von {name} hinzugefügt.",
+  "share.own_only": "Nur Ihre Dateien. Empfangene Dateien werden ohne Erlaubnis des Urhebers nicht weitergegeben. Bisherige Dateien bleiben bis zu Ihrer Zustimmung privat.",
+  "share.allow": "Teilen",
+  "share.deny": "Nicht teilen",
+  "share.gone": "Dieses Gerät gehört nicht mehr zur Familie.",
+  "share.preparing": "Die bisherigen Dateien werden noch geprüft. Versuchen Sie es gleich erneut — Ihre Anfrage ist gespeichert.",
   "app.name": "Familienordner",
   "app.tagline": "Ein Ordner, der Dateien selbst zwischen den Computern Ihrer Familie überträgt — direkt über das Internet, ohne eigenen Server und kostenlos.",
   "units": "B|KB|MB|GB|TB",

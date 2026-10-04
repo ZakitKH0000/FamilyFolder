@@ -10,6 +10,7 @@ mod notes;
 mod pairing;
 mod proto;
 mod scan;
+mod sharing;
 mod store;
 mod sync;
 mod transfer;

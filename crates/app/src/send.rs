@@ -22,7 +22,8 @@ pub fn drop_in(app: &AppHandle, paths: Vec<PathBuf>, peers: Vec<String>) -> usiz
     if paths.is_empty() {
         return 0;
     }
-    if !peers.is_empty() {
+    {
+        let peers = if peers.is_empty() { engine.snapshot().peers.into_iter().map(|p| p.id).collect() } else { peers };
         let items = paths.iter().filter_map(|p| p.file_name()).map(|n| n.to_string_lossy().into_owned()).collect();
         engine.target(items, peers);
     }

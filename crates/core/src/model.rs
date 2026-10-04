@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 pub struct Member {
     pub id: String,
     pub name: String,
+    #[serde(default)]
+    pub added_by: String,
 }
 
 /// «Семья» — набор связанных устройств и общий ключ для облака.
@@ -83,6 +85,25 @@ pub struct OfferFile {
     /// Версия, от которой сделано изменение (для определения конфликтов).
     #[serde(default)]
     pub prev_hash: Option<String>,
+    /// Автор и разрешённые получатели: чужие файлы нельзя раздать новому участнику.
+    #[serde(default)]
+    pub owner: String,
+    #[serde(default)]
+    pub audience: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct FileAccess {
+    pub owner: String,
+    pub audience: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HistoryShare {
+    pub peer: String,
+    pub added_by: String,
+    /// Только файлы, существовавшие при подключении; новые сюда не добавляются.
+    pub paths: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

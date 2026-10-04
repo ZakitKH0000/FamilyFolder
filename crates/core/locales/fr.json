@@ -1,4 +1,11 @@
 {
+  "share.question": "Partager vos anciens fichiers avec {name} ? Fichiers : {n}.",
+  "share.added_by": "Cet appareil a été ajouté par {name}.",
+  "share.own_only": "Uniquement vos fichiers. Les fichiers reçus ne sont pas transférés sans l’accord de leur auteur. Les anciens fichiers restent privés jusqu’à votre accord.",
+  "share.allow": "Partager",
+  "share.deny": "Ne pas partager",
+  "share.gone": "Cet appareil ne fait plus partie de la famille.",
+  "share.preparing": "Les anciens fichiers sont encore en cours de vérification. Réessayez dans un instant — votre demande est enregistrée.",
   "app.name": "Dossier familial",
   "app.tagline": "Un dossier qui transmet lui-même les fichiers entre les ordinateurs de votre famille : directement par Internet, sans serveur propre et gratuitement.",
   "units": "o|Ko|Mo|Go|To",

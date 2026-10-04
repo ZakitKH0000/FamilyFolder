@@ -1,4 +1,11 @@
 {
+  "share.question": "Önceki dosyalarınız {name} ile paylaşılsın mı? Dosya: {n}.",
+  "share.added_by": "Bu cihazı {name} ekledi.",
+  "share.own_only": "Yalnızca sizin dosyalarınız. Başkalarından alınan dosyalar sahibinin izni olmadan iletilmez. Önceki dosyalar siz kabul edene kadar gönderilmez.",
+  "share.allow": "Paylaş",
+  "share.deny": "Paylaşma",
+  "share.gone": "Bu cihaz artık ailede değil.",
+  "share.preparing": "Önceki dosyalar hâlâ kontrol ediliyor. Biraz sonra yeniden deneyin — isteğiniz kaydedildi.",
   "app.name": "Aile Klasörü",
   "app.tagline": "Dosyaları ailenizin bilgisayarları arasında kendiliğinden aktaran bir klasör — doğrudan internet üzerinden, kendi sunucusu olmadan ve ücretsiz.",
   "units": "B|KB|MB|GB|TB",
