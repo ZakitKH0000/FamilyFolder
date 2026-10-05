@@ -9,7 +9,7 @@
 Put a photo in the folder and it pops up on your brother's PC a moment later.<br>
 Carrying it there is **Papych** — a little robot folder with a big personality.
 
-<a href="https://apps.microsoft.com/detail/9NX8CF7SNKBF"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft Store" height="56"></a>
+<a href="https://apps.microsoft.com/store/detail/9NX8CF7SNKBF?cid=DevShareMCLPCS"><img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="Get it from Microsoft Store" height="56"></a>
 &nbsp;&nbsp;
 <a href="https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.5.0/FamilyFolder-1.5.0-Setup.exe"><img src="https://img.shields.io/badge/Download_installer-v1.5.0-1f7ae0?style=for-the-badge" alt="Download the installer" height="38"></a>
 
@@ -22,6 +22,20 @@ Carrying it there is **Papych** — a little robot folder with a big personality
 **English** · [Русский](#русский)
 
 </div>
+
+**Install from Microsoft Store / Установить из Microsoft Store** — PowerShell or Command Prompt:
+
+```powershell
+winget install --id 9NX8CF7SNKBF --exact --source msstore --accept-source-agreements --accept-package-agreements
+```
+
+**Update the Store version / Обновить версию из Store:**
+
+```powershell
+winget upgrade --id 9NX8CF7SNKBF --exact --source msstore --accept-source-agreements --accept-package-agreements
+```
+
+These commands use the Microsoft Store package. [Installation details](#install-store) · [Подробнее по-русски](#install-store-ru).
 
 ---
 
@@ -43,6 +57,8 @@ Choose a relative or the whole family in **Chats**, or click **Reply** in a noti
 
 If your relative is offline, connect your own **Yandex Disk, WebDAV or cloud folder**. Text and voice messages wait in an encrypted mailbox; after the app confirms **In the cloud**, you can turn off your computer. The recipient gets them on their next launch with the same cloud connected. All participants need **1.5.0 or newer**. Cloud copies are cleaned up after acknowledgement when the sender returns online.
 
+<div align="center"><img src="media/cloud-1.5.png" width="860" alt="Encrypted cloud delivery while a family member is offline"></div>
+
 ## 🤖 Meet Papych
 
 <div align="center"><img src="media/moods.webp" width="720" alt="Papych says hello, sneezes, gets dizzy, lifts a heavy file, naps during a pause and searches for the connection"></div>
@@ -57,7 +73,7 @@ Papych lives in the app window and in the bar at the top of your screen — and 
 
 ## 🎚️ The bar at the top of the screen
 
-<div align="center"><img src="media/shade.webp" width="820" alt="A file is dragged to the top of the screen, the black bar slides down and Papych swallows the file"></div>
+<div align="center"><img src="crates/app/store/listing/2-shade.png" width="820" alt="The compact top bar lets you choose one relative or the whole family"></div>
 
 - **Drag files to the top of the screen** and a sleek black bar slides down with Papych and a mini robot for every family member. Drop on Papych — **everyone** gets it. Drop on a mini robot — **only that person** does.
 - **Nudge the pointer to the top center** and the bar peeks out: who's online and how the downloads are going.
@@ -72,19 +88,19 @@ Open your shared folder in File Explorer and an optional panel appears beside it
 
 ## 🗺️ A guided tour by Papych
 
-<div align="center"><img src="media/tour.webp" width="820" alt="Papych jumps out of the app window and explains the features with a pointer stick"></div>
+<div align="center"><img src="crates/app/store/listing/3-tour.png" width="820" alt="Papych jumps out of the app window and explains the features with a pointer stick"></div>
 
 After you install or update the app, Papych **jumps out of the window** and walks you through everything with his **pointer stick**: the bar, dragging files, the window, messages and the pause button by the clock. Replay it anytime in **Settings → Papych**.
 
 ## 🪟 The app
 
-<div align="center"><img src="media/window.png" width="860" alt="The Family Folder window: incoming files, a message to the family and settings"></div>
+<div align="center"><img src="crates/app/store/listing/4-window.png" width="860" alt="Family Folder 1.5: incoming files, voice chat and notification settings"></div>
 
 - **A family of any size.** Connect computers with a one-time invite code (valid for 24 hours).
 - **Auto-accept**: always ask, photos only, or all files — with a size limit; programs are always asked about separately, and 5 GB of disk space is always kept free.
 - **Pause** for 30 minutes, 1 hour, 3 hours or until you resume.
 - **Optional cloud route** for when your computers aren't online at the same time: Yandex Disk, WebDAV (Nextcloud, Koofr, pCloud, NAS…) or a OneDrive / Google Drive / Dropbox folder. Files are encrypted before upload and deleted after delivery.
-- **Updates itself within the family.** Once one computer has a new version, the others get the signed installer from it and update quietly when nothing is being transferred.
+- **Updates through Microsoft Store.** The Store edition receives its updates from Microsoft Store. The standalone installer edition can receive signed updates from other family computers when nothing is being transferred.
 - **Feels at home in Windows:** pinned in Explorer, a desktop shortcut, an optional side panel next to the folder and an icon by the clock. Live Mica background on Windows 11.
 - **8 languages**, following your Windows language: English, Русский, Deutsch, Español, Français, Português, Türkçe, 中文.
 
@@ -95,11 +111,17 @@ After you install or update the app, Papych **jumps out of the window** and walk
 - The cloud is used only if you connect one, with your own account.
 - Settings and keys never leave your computer.
 
+<a id="install-store"></a>
+
 ## ⬇️ Install
 
-**New in [1.5.0](https://github.com/ZakitKH0000/FamilyFolder/releases/tag/v1.5.0):** private and family chats, voice messages, quick replies in the top bar, new Papych animations, notification sounds and encrypted cloud delivery of messages. The interface now supports eight languages. The 1.5.0 Microsoft Store package is prepared; this update is not yet submitted or published there.
+**New in [1.5.0](https://github.com/ZakitKH0000/FamilyFolder/releases/tag/v1.5.0):** private and family chats, voice messages, quick replies in the top bar, new Papych animations, notification sounds and encrypted cloud delivery of messages. Eight interface languages. **The update has passed Microsoft Store certification.**
 
-**Recommended: [Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF).** One click to install, updates arrive automatically, and Windows shows no warnings.
+**Recommended: [Microsoft Store](https://apps.microsoft.com/store/detail/9NX8CF7SNKBF?cid=DevShareMCLPCS).** Install the Microsoft-signed Store package with the button above or the `winget install` command. This avoids the unsigned EXE download warning; updates are delivered through Store. Use `winget upgrade` above to request an available update for the installed Store edition.
+
+Open **Windows Terminal, PowerShell or Command Prompt** and paste the command. The agreement flags accept the Store and package terms. If `winget` is missing, install or update [App Installer](https://apps.microsoft.com/detail/9NBLGGH4NNS1), or use the Store button. If no newer version is available, keep your current version and check **Microsoft Store → Library** later. [WinGet install](https://learn.microsoft.com/en-us/windows/package-manager/winget/install) · [WinGet upgrade](https://learn.microsoft.com/en-us/windows/package-manager/winget/upgrade).
+
+Already using the downloaded EXE? The commands above install/update the Store edition; they do not sign or update the standalone EXE installation. Quit the standalone app before switching and use one edition on each computer.
 
 Or use the installer: download **[FamilyFolder-1.5.0-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.5.0/FamilyFolder-1.5.0-Setup.exe)** (Windows 10 / 11, 64-bit, 7 MB) and run it. Windows may say *“Windows protected your PC”* — the installer isn't signed with a paid certificate yet; click **More info → Run anyway**. Installed this way, the app updates itself from your family.
 
@@ -151,7 +173,7 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 **Файлы, чаты и голосовые для всей семьи — между вашими компьютерами, с Папычем рядом.**
 Положили фото в папку — и через мгновение оно уже на компьютере брата. А доставляет его **Папыч** — маленький робот-папка с большим характером.
 
-**[⬇️ Установить из Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF)** · [установщик 1.5.0](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.5.0/FamilyFolder-1.5.0-Setup.exe) · Windows 10 / 11 · бесплатно · 8 языков
+**[⬇️ Установить из Microsoft Store](https://apps.microsoft.com/store/detail/9NX8CF7SNKBF?cid=DevShareMCLPCS)** · [установщик 1.5.0](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.5.0/FamilyFolder-1.5.0-Setup.exe) · Windows 10 / 11 · бесплатно · 8 языков
 
 ### ✨ Что умеет
 
@@ -163,11 +185,15 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 
 ### 💬 Чат прямо в шторке
 
-<div align="center"><img src="media/hero-1.5-ru.png" width="860" alt="Общая папка 1.5: файлы, чаты и голосовые с Папычем"></div>
+<div align="center"><img src="crates/app/store/listing/ru/6-chats.png" width="860" alt="Ответ текстом и голосом прямо в мини-чате шторки"></div>
 
 Откройте **Чаты**, выберите человека или всю семью. Можно ответить прямо из уведомления: шторка удлинится и покажет мини-чат. У голосового сообщения есть волна звука и перемотка, а Папыч прыгает со своего места сверху к микрофону и кнопке воспроизведения. Звук уведомлений можно прослушать, выключить или изменить его громкость.
 
+<div align="center"><img src="crates/app/store/listing/ru/7-voice.png" width="860" alt="Голосовые сообщения с волной звука и анимациями Папыча"></div>
+
 Если адресат не в сети, подключите **Яндекс Диск, WebDAV или облачную папку**. Текст и голос будут ждать в зашифрованной очереди. После подтверждения **«В облаке»** можно выключить компьютер: адресат получит сообщения при следующем запуске с подключённым тем же облаком. Всем участникам нужна версия **1.5.0 или новее**. Очистка облачных копий после подтверждения доставки происходит, когда отправитель снова запускает приложение.
+
+<div align="center"><img src="crates/app/store/listing/ru/8-cloud.png" width="860" alt="Зашифрованная облачная доставка сообщений, когда родные не в сети"></div>
 
 ### 🤖 Знакомьтесь: Папыч
 
@@ -181,12 +207,16 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 
 ### 🎚️ Шторка сверху экрана
 
+<div align="center"><img src="crates/app/store/listing/ru/2-shade.png" width="860" alt="Компактная шторка с выбором получателя файла"></div>
+
 - **Потащите файлы к верху экрана** — выедет чёрная шторка с Папычем и мини-роботами всех родных. Бросите на Папыча — получат **все**, на мини-робота — **только он**.
 - **Подведите курсор к верху по центру** — шторка выглянет: кто в сети и как идут загрузки.
 - Новые файлы появляются прямо в ней с кнопками **«Получить / Отклонить»**, а ещё «получено», «доставлено» и «подключено новое устройство».
 - Привыкли к обычным уведомлениям? Выберите шторку, уведомления Windows или и то и другое. Во время игр и фильмов на весь экран шторка не мешает — придёт тихое уведомление Windows.
 
 ### 📁 Панель рядом с Проводником
+
+<div align="center"><img src="crates/app/store/listing/ru/9-explorer.png" width="860" alt="Панель общей папки рядом с Проводником, демонстрационные файлы"></div>
 
 Откройте общую папку в Проводнике — рядом появится панель приложения. Принимайте файлы, следите за передачей, открывайте чаты и ставьте обмен на паузу прямо возле папки. Панель можно включить в настройках.
 
@@ -196,11 +226,13 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 
 ### 🪟 Программа
 
+<div align="center"><img src="crates/app/store/listing/ru/4-window.png" width="860" alt="Входящие файлы, чат и настройки звука в Общей папке 1.5"></div>
+
 - **Семья любого размера.** Компьютеры подключаются по одноразовому коду приглашения (действует 24 часа).
 - **Автоприём:** всегда спрашивать, только фото или все файлы — с пределом размера; о программах всегда спросит отдельно, а 5 ГБ на диске всегда оставит свободными.
 - **Пауза** на 30 минут, 1 час, 3 часа или пока не продолжите.
 - **Облако по желанию** — на случай, когда компьютеры не включены одновременно: Яндекс Диск, WebDAV (Nextcloud, Koofr, pCloud, NAS…) или папка OneDrive / Google Диска / Dropbox. Файлы шифруются перед загрузкой и удаляются после доставки.
-- **Обновляется сама внутри семьи.** Как только у одного компьютера новая версия, остальные получают от него подписанный установщик и тихо обновляются, когда ничего не передаётся.
+- **Обновляется через Microsoft Store.** Версия из Store получает обновления через магазин. Версия, установленная отдельным установщиком, может получать подписанные обновления от компьютеров семьи, когда ничего не передаётся.
 - **Как родная в Windows:** закреплена в Проводнике, ярлык на рабочем столе, панель рядом с папкой и значок у часов. На Windows 11 — живой фон Mica.
 - **8 языков** — по языку Windows.
 
@@ -211,11 +243,17 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 - Облако используется, только если вы его подключите, — с вашей учётной записью.
 - Настройки и ключи не покидают ваш компьютер.
 
+<a id="install-store-ru"></a>
+
 ### ⬇️ Установка
 
-**Новое в [1.5.0](https://github.com/ZakitKH0000/FamilyFolder/releases/tag/v1.5.0):** личные и семейные чаты, голосовые сообщения, быстрые ответы в шторке, новые анимации Папыча, звук уведомлений и зашифрованная облачная доставка сообщений. В интерфейсе восемь языков. Пакет 1.5.0 для Microsoft Store подготовлен, но обновление туда ещё не отправлено и не опубликовано.
+**Новое в [1.5.0](https://github.com/ZakitKH0000/FamilyFolder/releases/tag/v1.5.0):** личные и семейные чаты, голосовые сообщения, быстрые ответы в шторке, новые анимации Папыча, звук уведомлений и зашифрованная облачная доставка сообщений. Восемь языков интерфейса. **Обновление прошло сертификацию Microsoft Store.**
 
-**Лучше всего — из [Microsoft Store](https://apps.microsoft.com/detail/9NX8CF7SNKBF).** Установка в один щелчок, обновления приходят сами, Windows ни о чём не предупреждает.
+**Лучше всего — из [Microsoft Store](https://apps.microsoft.com/store/detail/9NX8CF7SNKBF?cid=DevShareMCLPCS).** Кнопка выше и команда `winget install` устанавливают пакет Store с подписью Microsoft: предупреждение о скачанном неподписанном EXE не появляется. Обновления приходят через магазин; команда `winget upgrade` выше запрашивает доступное обновление установленной Store-версии.
+
+Откройте **Терминал Windows, PowerShell или командную строку** и вставьте команду из начала страницы. Параметры соглашений принимают условия магазина и пакета. Если `winget` не найден, установите или обновите [Установщик приложений](https://apps.microsoft.com/detail/9NBLGGH4NNS1) либо воспользуйтесь кнопкой Store. Если новой версии ещё нет в каталоге, проверьте позже **Microsoft Store → Библиотека**. [Документация установки](https://learn.microsoft.com/en-us/windows/package-manager/winget/install) · [Документация обновления](https://learn.microsoft.com/en-us/windows/package-manager/winget/upgrade).
+
+Уже пользуетесь скачанным EXE? Эти команды устанавливают/обновляют версию из Store; они не подписывают и не обновляют отдельную EXE-установку. Перед переходом закройте обычную программу и используйте на компьютере одну версию.
 
 Или установщиком: скачайте **[FamilyFolder-1.5.0-Setup.exe](https://github.com/ZakitKH0000/FamilyFolder/releases/download/v1.5.0/FamilyFolder-1.5.0-Setup.exe)** (Windows 10 / 11, 64 бита, 7 МБ) и запустите. Windows может показать *«Система Windows защитила ваш компьютер»* — у установщика пока нет платной подписи; нажмите **«Подробнее» → «Выполнить в любом случае»**. Так установленная программа обновляется сама от родных.
 
