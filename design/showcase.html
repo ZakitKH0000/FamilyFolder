@@ -65,6 +65,18 @@ const q = new URLSearchParams(location.search);
 const scene = ['hero', 'moods', 'shade', 'tour', 'poster'].find(s => q.has(s)) || 'hero';
 // ?ru — надписи и окна программы по-русски (для русских площадок).
 const RU = q.has('ru'), LANG = RU ? 'ru' : 'en', FILE = RU ? 'Дача.jpg' : 'Summer.jpg';
+// В браузерной сцене прозрачный WebView не должен получать тёмный canvas iframe.
+new MutationObserver(() => document.querySelectorAll('iframe').forEach(frame => {
+  if (frame.dataset.transparentCanvas) return;
+  frame.dataset.transparentCanvas = '1';
+  frame.addEventListener('load', () => {
+    const doc = frame.contentDocument;
+    if (!doc || !/\/(island|tour)\.html/.test(frame.src)) return;
+    const style = doc.createElement('style');
+    style.textContent = 'html,body{color-scheme:normal!important;background:transparent!important}';
+    doc.head.append(style);
+  });
+})).observe(document.body, {childList:true,subtree:true});
 const sleep = s => new Promise(r => setTimeout(r, s * 1000));
 const h = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; (parent || document.body).append(e); return e; };
 const ease = k => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2);

@@ -1,0 +1,25 @@
+<!doctype html><html><meta charset="utf-8"><title>Панель у Проводника</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font:14px 'Segoe UI',sans-serif;color:#edf4ff}
+body{background:radial-gradient(ellipse at 65% 100%,#1555a1,transparent 68%),linear-gradient(130deg,#071326,#112f60)}
+.head{position:absolute;top:22px;left:42px;font-size:22px;font-weight:600}.head span{color:#9bb4d1;font-size:14px;font-weight:400;margin-left:22px}
+.explorer{position:absolute;left:40px;top:70px;width:790px;height:620px;background:#202020;border:1px solid #ffffff26;border-radius:12px;box-shadow:0 20px 60px #0007;overflow:hidden}
+.tabs{height:46px;background:#191919;display:flex;align-items:center;justify-content:space-between;padding:0 14px}.tab{background:#292929;border-radius:8px 8px 0 0;padding:12px 18px;width:245px;display:flex;gap:14px;align-items:center}.controls{letter-spacing:22px;color:#bbb}
+.address{height:61px;display:flex;align-items:center;gap:16px;padding:10px 20px;background:#262626}.crumb{background:#343434;border-radius:7px;padding:12px 16px;flex:1}.search{background:#343434;padding:12px;border-radius:7px;color:#aaa;min-width:185px}
+.tools{display:flex;gap:25px;align-items:center;padding:18px 22px;border-bottom:1px solid #ffffff12;color:#ddd}
+.area{display:flex;height:445px}.sidebar{width:188px;border-right:1px solid #ffffff14;padding:20px 10px;background:#252525}.sidebar div{padding:12px 13px;margin-bottom:5px;color:#ccc;border-radius:5px}.sidebar .chosen{background:#ffffff14;color:#fff;outline:1px solid #ffffff22}
+.content{flex:1;padding:20px 24px}.table-head{display:grid;grid-template-columns:1fr 105px 70px;font-size:12px;color:#aaa;padding:0 8px 12px;border-bottom:1px solid #ffffff12}.file{display:grid;grid-template-columns:1fr 105px 70px;align-items:center;padding:17px 8px;border-bottom:1px solid #ffffff08}.file small{color:#aaa;font-size:12px}.name{display:flex;align-items:center;gap:12px}.folder{width:25px;height:19px;border-radius:3px;background:#e9ad32;box-shadow:inset 0 4px #ffcf63}.photo{width:25px;height:23px;border-radius:3px;background:linear-gradient(145deg,#5fc6e7 55%,#67b570 56%)}.doc{width:21px;height:26px;border:2px solid #96bdf4;border-radius:3px;background:#35629c}
+.bottom{position:absolute;bottom:0;left:0;right:0;padding:11px 18px;border-top:1px solid #ffffff12;color:#aaa;background:#202020;font-size:12px}.panel{position:absolute;left:850px;top:70px;width:380px;height:620px;border-radius:12px;overflow:hidden;border:1px solid #ffffff25;box-shadow:0 20px 55px #0007}.panel iframe{width:380px;height:620px;border:0}
+</style><div class="head" id="headline"></div><div class="explorer"><div class="tabs"><div class="tab">📁 <b id="tab"></b><span style="margin-left:auto">×</span></div><div class="controls">− □ ×</div></div><div class="address"><span>←　→　↑　⟳</span><div class="crumb" id="crumb"></div><div class="search" id="search"></div></div><div class="tools" id="tools"></div><div class="area"><nav class="sidebar" id="sidebar"></nav><div class="content"><div class="table-head" id="columns"></div><div id="files"></div></div></div><div class="bottom" id="bottom"></div></div><div class="panel"><iframe id="app"></iframe></div>
+<script>
+const en=new URLSearchParams(location.search).get('lang')==='en',lang=en?'en':'ru',w=(ru,enText)=>en?enText:ru;
+document.documentElement.lang=lang;
+const put=(id,value)=>document.getElementById(id).innerHTML=value;
+put('headline',w('Общая папка. Всё под рукой.','Family Folder. Everything within reach.')+'<span>'+w('Панель управления рядом с Проводником','Your control panel beside File Explorer')+'</span>');
+put('tab',w('Общая','Family Folder'));put('crumb',w('Этот компьютер　 ›　 Общая','This PC　 ›　 Family Folder'));put('search',w('Поиск в общей папке','Search Family Folder'));
+put('tools',w('＋ Создать　　✂　▣　▤　　⌫　　↕ Сортировать　　⋯','＋ New　　✂　▣　▤　　⌫　　↕ Sort　　⋯'));
+put('sidebar',[w('Главная','Home'),w('Галерея','Gallery'),w('Рабочий стол','Desktop'),w('Общая','Family Folder'),w('Загрузки','Downloads'),w('Документы','Documents'),w('Изображения','Pictures')].map((s,i)=>'<div class="'+(i===3?'chosen':'')+'">'+(i===3?'📁 ':'')+s+'</div>').join(''));
+put('columns','<span>'+w('Имя','Name')+'</span><span>'+w('Тип','Type')+'</span><span>'+w('Размер','Size')+'</span>');
+put('files',[[w('Семейные фотографии','Family photos'),'folder',w('Папка','Folder'),'—'],[w('Поездка.jpg','Trip.jpg'),'photo',w('Изображение','Image'),w('2,4 МБ','2.4 MB')],[w('Планы на выходные.docx','Weekend plans.docx'),'doc',w('Документ','Document'),w('128 КБ','128 KB')]].map(([name,kind,type,size])=>'<div class="file"><span class="name"><i class="'+kind+'"></i>'+name+'</span><small>'+type+'</small><small>'+size+'</small></div>').join(''));
+put('bottom',w('Элементов: 3','3 items'));
+const frame=document.getElementById('app');frame.src='/index.html?lang='+lang;frame.onload=()=>setTimeout(()=>frame.contentWindow.eval('S.settings.tips=false; S.settings.device_name="'+w('Семейный компьютер','Family PC')+'"; S.folder="C:\\\\FamilyFolder"; closeViews(); render();'),900);
+</script></html>

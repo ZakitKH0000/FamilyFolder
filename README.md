@@ -64,6 +64,12 @@ Papych lives in the app window and in the bar at the top of your screen — and 
 - New files show up right there with **Get / Decline**, along with “received”, “delivered” and “new device joined”.
 - Prefer classic notifications? Choose the bar, Windows notifications, or both. During full-screen games and movies it stays out of the way and uses a quiet Windows notification.
 
+## 📁 A control panel beside File Explorer
+
+<div align="center"><img src="media/explorer-1.5.png" width="860" alt="Family Folder panel beside File Explorer with demonstration files"></div>
+
+Open your shared folder in File Explorer and an optional panel appears beside it. Receive files, watch transfers, open chats and pause sharing without switching away from your folder. Enable it in Settings. The illustration uses demonstration files.
+
 ## 🗺️ A guided tour by Papych
 
 <div align="center"><img src="media/tour.webp" width="820" alt="Papych jumps out of the app window and explains the features with a pointer stick"></div>
@@ -179,6 +185,10 @@ Free to download and use. © 2026 Zakir. All rights reserved: the source code is
 - **Подведите курсор к верху по центру** — шторка выглянет: кто в сети и как идут загрузки.
 - Новые файлы появляются прямо в ней с кнопками **«Получить / Отклонить»**, а ещё «получено», «доставлено» и «подключено новое устройство».
 - Привыкли к обычным уведомлениям? Выберите шторку, уведомления Windows или и то и другое. Во время игр и фильмов на весь экран шторка не мешает — придёт тихое уведомление Windows.
+
+### 📁 Панель рядом с Проводником
+
+Откройте общую папку в Проводнике — рядом появится панель приложения. Принимайте файлы, следите за передачей, открывайте чаты и ставьте обмен на паузу прямо возле папки. Панель можно включить в настройках.
 
 ### 🗺️ Экскурсия с Папычем
 

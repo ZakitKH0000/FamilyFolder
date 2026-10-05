@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><title>Общая папка — окна приложения</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:'Segoe UI',sans-serif;color:#edf4ff}
+body{background:radial-gradient(ellipse at 60% 90%,#164e99,transparent 70%),linear-gradient(130deg,#071327,#112952)}
+.windows{display:flex;justify-content:center;gap:28px;padding-top:50px}
+iframe{width:380px;height:620px;border:1px solid #ffffff20;border-radius:12px;box-shadow:0 15px 40px #0008;background:#101825}
+</style><div class="windows"><iframe id="files"></iframe><iframe id="chat"></iframe><iframe id="settings"></iframe></div>
+<script>
+const lang=new URLSearchParams(location.search).get('lang')==='en'?'en':'ru';
+document.documentElement.lang=lang;
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const labels=lang==='ru'?['Брат','Привет! Фото получил?','Да, спасибо! Сейчас пришлю голосовое.']:['Brother','Hi! Did you get the photos?','Yes, thanks! Sending a voice message.'];
+window.__ready=false;
+Promise.all(['files','chat','settings'].map(async id=>{
+ const frame=document.getElementById(id);frame.src='/index.html?lang='+lang;
+ await new Promise(r=>frame.onload=r);await wait(900);
+ const win=frame.contentWindow;
+ win.eval('S.settings.tips=false; closeViews(); render();');
+ if(id==='settings')win.eval('openSettings(); const body=document.querySelector("#settings .view-body"), row=document.querySelector("#set-island").closest(".row"); body.scrollTop=row.getBoundingClientRect().top-body.getBoundingClientRect().top-32;');
+ if(id==='chat'){
+  const now=Date.now(),waveform=Array.from({length:48},(_,i)=>Math.round(35+180*Math.abs(Math.sin(i*.41)*Math.cos(i*.19))));
+  const notes=[
+   {id:'store-in',outgoing:false,peer_id:'b',peer:labels[0],text:labels[1],created_at:now-120000,seen:true,to:[],group:false},
+   {id:'store-out',outgoing:true,peer_id:'',peer:'',text:labels[2],created_at:now-60000,seen:true,to:[{id:'b',name:labels[0],delivered:true}],group:false,reply_to:'store-in'},
+   {id:'store-voice',outgoing:true,peer_id:'',peer:'',text:'',created_at:now-30000,seen:true,to:[{id:'b',name:labels[0],delivered:true}],group:false,voice_ready:true,voice:{size:18000,hash:'demo',mime:'audio/webm',duration_ms:17400,waveform}}
+  ];
+  win.eval('S.notes='+JSON.stringify(notes)+'; render(); switchTab("chat"); Chat.select("b");');
+ }
+})).then(()=>window.__ready=true);
+</script></html>

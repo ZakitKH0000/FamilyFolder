@@ -14,6 +14,8 @@ h1{font-size:54px;line-height:1.1;letter-spacing:-2px;margin:28px 0 20px;max-wid
 <script src="/papych.js"></script><script>
 const q=new URLSearchParams(location.search), en=q.get('lang')==='en', scene=q.get('scene')||'hero';
 const w=(a,b)=>en?b:a, sleep=s=>new Promise(r=>setTimeout(r,s*1000));
+document.documentElement.lang=en?'en':'ru';
+document.querySelector('.brand').firstChild.nodeValue=w('ОБЩАЯ ПАПКА ','FAMILY FOLDER ');
 const texts={
 hero:[w('Ваша семья.<br><em>Всегда на связи.</em>','Your family.<br><em>Always connected.</em>'),w('Файлы, чаты и голосовые — между вашими компьютерами. С Папычем рядом.','Files, chats and voice messages — between your computers. With Papych by your side.')],
 chats:[w('Один клик.<br><em>И вы в чате.</em>','One click.<br><em>And you’re chatting.</em>'),w('Ответьте прямо из шторки. Одному человеку или всей семье — текстом и голосом.','Reply right from the top bar. To one person or the whole family — with text or voice.')],
@@ -38,6 +40,8 @@ window.__ready=false;
  if(scene==='chats'){
   document.querySelector('#device').classList.add('off');document.querySelector('#shade').classList.remove('off');
   mini.src='/island.html?manual&lang='+w('ru','en');await new Promise(r=>mini.onload=r);await sleep(.5);seed(mini.contentWindow);
+  const transparent=mini.contentDocument.createElement('style');transparent.textContent='html,body{color-scheme:normal!important;background:transparent!important}';mini.contentDocument.head.append(transparent);
+  document.querySelector('#shade').style.cssText='left:742px;top:94px;width:480px;height:600px;transform:scale(.88);transform-origin:top left';
   mini.contentWindow.eval("open('peek'); MiniChat.open();");await sleep(.3);mini.contentWindow.eval("Chat.select('b'); Chat.reply('sample-1');");
  }
  if(scene==='cloud'){main.contentWindow.eval("S.peers[0].online=false; render(); Chat.update();");bot.chatCloud();}
