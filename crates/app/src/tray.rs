@@ -74,7 +74,8 @@ pub fn create(app: &AppHandle) -> tauri::Result<()> {
 }
 
 pub fn update(app: &AppHandle, st: &UiState) {
-    let new = st.incoming.iter().filter(|i| i.state == "new").count();
+    let new = st.incoming.iter().filter(|i| i.state == "new").count()
+        + st.notes.iter().filter(|n| !n.outgoing && !n.seen).count();
     let paused = st.paused_until > 0;
     static SHOWN_PAUSED: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(2);
     if SHOWN_PAUSED.swap(paused as u8, std::sync::atomic::Ordering::Relaxed) != paused as u8

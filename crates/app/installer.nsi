@@ -492,7 +492,6 @@ FunctionEnd
 ; Дальше «Пуск» и «Приложения» переименовывает сама программа под свой язык (shell::sync_app_name).
 LangString APPNAME ${LANG_ENGLISH} "Family Folder"
 LangString APPNAME ${LANG_RUSSIAN} "Общая папка"
-LangString APPNAME ${LANG_UKRAINIAN} "Спільна папка"
 LangString APPNAME ${LANG_GERMAN} "Familienordner"
 LangString APPNAME ${LANG_SPANISH} "Carpeta familiar"
 LangString APPNAME ${LANG_FRENCH} "Dossier familial"

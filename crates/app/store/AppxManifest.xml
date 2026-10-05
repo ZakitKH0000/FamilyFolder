@@ -25,7 +25,6 @@
   <Resources>
     <Resource Language="en-us" />
     <Resource Language="ru-ru" />
-    <Resource Language="uk-ua" />
     <Resource Language="de-de" />
     <Resource Language="es-es" />
     <Resource Language="fr-fr" />
@@ -38,7 +37,7 @@
     <Application Id="App" Executable="ObshayaPapka.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="{{DISPLAY}}"
-        Description="A shared folder for the whole family: files go straight from one computer to another."
+        Description="Files, chats and voice messages for your family, delivered by Papych."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
@@ -58,5 +57,6 @@
     <Capability Name="internetClientServer" />
     <Capability Name="privateNetworkClientServer" />
     <rescap:Capability Name="runFullTrust" />
+    <DeviceCapability Name="microphone" />
   </Capabilities>
 </Package>

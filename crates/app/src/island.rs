@@ -30,7 +30,7 @@ use crate::AppState;
 pub const LABEL: &str = "island";
 /// Размер окна шторки (логические пиксели): с запасом на самую большую шторку и тень.
 const WIDTH: f64 = 480.0;
-const HEIGHT: f64 = 360.0;
+const HEIGHT: f64 = 600.0;
 
 static OPEN: AtomicBool = AtomicBool::new(false);
 /// Страница шторки загрузилась; до этого события копятся в PENDING.
@@ -105,7 +105,7 @@ pub fn show(app: &AppHandle, reason: &'static str, data: serde_json::Value) {
     let mut p = POINT::default();
     let _ = unsafe { GetCursorPos(&mut p) };
     let (mon, scale) = monitor(p);
-    let size = PhysicalSize::new((WIDTH * scale) as u32, (HEIGHT * scale) as u32);
+    let size = PhysicalSize::new((WIDTH * scale) as u32, (HEIGHT * scale).min((mon.bottom-mon.top) as f64) as u32);
     let pos = PhysicalPosition::new(mon.left + (mon.right - mon.left - size.width as i32) / 2, mon.top);
     // Показывает сам Tauri (иначе он считает окно скрытым и прячет его при следующей настройке).
     // Размер — дважды: переезд на монитор с другим масштабом меняет размер окна.
@@ -263,6 +263,7 @@ fn watch(app: AppHandle) {
 fn close(app: &AppHandle) {
     OPEN.store(false, Ordering::Relaxed);
     if let Some(w) = app.get_webview_window(LABEL) {
+        let _ = w.set_focusable(false);
         let _ = w.hide();
     }
 }
@@ -310,4 +311,13 @@ pub fn send_dropped(app: AppHandle, paths: Vec<String>, peers: Vec<String>) -> u
 #[tauri::command]
 pub fn show_main(app: AppHandle) {
     crate::panel::show_floating(&app);
+}
+
+/// Фокус только после явного нажатия «Чат»; hover остаётся неактивирующим.
+#[tauri::command]
+pub fn island_chat_focus(app: AppHandle, active: bool) {
+    if let Some(w) = app.get_webview_window(LABEL) {
+        let _ = w.set_focusable(active);
+        if active { let _ = w.set_ignore_cursor_events(false); let _ = w.set_focus(); }
+    }
 }

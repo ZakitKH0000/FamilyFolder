@@ -141,6 +141,7 @@ pub(crate) struct Inner {
     pub endpoint: Endpoint,
     state: Mutex<State>,
     save_flag: AtomicBool,
+    save_lock: Mutex<()>,
     save_notify: Notify,
     changed_flag: AtomicBool,
     events: mpsc::UnboundedSender<Event>,
@@ -152,6 +153,9 @@ pub(crate) struct Inner {
     pub scanning: Mutex<HashSet<String>>,
     pub preparing: Mutex<BTreeMap<String, (u64, u64)>>,
     pub downloads: Mutex<HashSet<String>>,
+    pub voice_downloads: Mutex<HashSet<String>>,
+    pub voice_serving: AtomicU64,
+    pub chat_cloud_busy: AtomicBool,
     pub cancelled: Mutex<HashSet<String>>,
     pub uploads: Mutex<HashMap<String, (u64, u64)>>,
     pub forced_uploads: Mutex<HashSet<String>>,
@@ -223,19 +227,19 @@ impl Inner {
     }
 
     pub fn save_now(&self) {
+        if let Err(e) = self.save_checked() {
+            tracing::error!("не удалось сохранить состояние: {e:#}");
+        }
+    }
+
+    pub fn save_checked(&self) -> Result<()> {
+        let _saving = lock(&self.save_lock);
         let data = {
             let mut s = self.st();
             s.prune();
-            serde_json::to_vec(&*s)
+            serde_json::to_vec(&*s)?
         };
-        match data {
-            Ok(data) => {
-                if let Err(e) = crate::util::write_atomic(&self.data_dir.join("state.json"), &data) {
-                    tracing::error!("не удалось сохранить состояние: {e:#}");
-                }
-            }
-            Err(e) => tracing::error!("не удалось сохранить состояние: {e:#}"),
-        }
+        crate::util::write_atomic(&self.data_dir.join("state.json"), &data)
     }
 
     /// Сообщает окну об изменениях не чаще ~6 раз в секунду.
@@ -363,6 +367,9 @@ impl Engine {
         let key = load_or_create_key(&data_dir.join("device.key"))?;
         let me = key.public().to_string();
         let mut state = store::load(&data_dir.join("state.json"));
+        if !state.settings.language.is_empty() && !crate::i18n::LANGS.iter().any(|(code,_)|*code==state.settings.language) {
+            state.settings.language.clear();
+        }
         crate::i18n::set_lang(&state.settings.language);
         if state.settings.auto_accept.is_none() {
             // Настройки до 1.1: автоприём был только для фото, 0 — выключен.
@@ -428,6 +435,10 @@ impl Engine {
             scanning: Mutex::default(),
             preparing: Mutex::default(),
             downloads: Mutex::default(),
+            voice_downloads: Mutex::default(),
+            voice_serving: AtomicU64::new(0),
+            chat_cloud_busy: AtomicBool::new(false),
+            save_lock: Mutex::default(),
             cancelled: Mutex::default(),
             uploads: Mutex::default(),
             forced_uploads: Mutex::default(),
@@ -466,6 +477,7 @@ impl Engine {
         scan::start(&inner);
         crate::engine::spawn(transfer::scheduler(inner.clone()));
         cloud::start(&inner);
+        crate::engine::spawn(crate::voice::scheduler(inner.clone()));
         Ok((Engine(inner), rx))
     }
 
@@ -486,7 +498,8 @@ impl Engine {
     }
 
     /// Сохранение настроек. Смена папки перезапускает слежение.
-    pub fn set_settings(&self, new: Settings) -> Result<()> {
+    pub fn set_settings(&self, mut new: Settings) -> Result<()> {
+        if !new.language.is_empty() && !crate::i18n::LANGS.iter().any(|(code,_)|*code==new.language) { new.language.clear(); }
         let inner = &self.0;
         let (folder_changed, name_changed) = {
             let mut s = inner.st();
@@ -559,6 +572,7 @@ impl Engine {
 
     /// «Отклонить» или отмена идущей загрузки.
     pub fn decline(&self, id: &str) {
+        if !crate::voice::valid_id(id) { return; }
         let inner = &self.0;
         {
             let mut s = inner.st();
@@ -584,6 +598,10 @@ impl Engine {
             s.incoming.retain(|i| !(i.offer.id == id && i.state.is_final()));
             s.outgoing.retain(|o| !(o.offer.id == id && o.state.is_final()));
             s.notes.retain(|n| n.id != id);
+        }
+        if let Ok(path) = crate::voice::path(inner, id) {
+            let _ = std::fs::remove_file(&path);
+            let _ = std::fs::remove_file(path.with_extension("part"));
         }
         inner.save_soon();
         inner.changed();
@@ -665,6 +683,26 @@ impl Engine {
         crate::notes::send(&self.0, text, peers)
     }
 
+    pub fn send_chat(&self, text: &str, peer: Option<&str>) -> Result<()> {
+        crate::notes::send_chat(&self.0, text, peer, None, None)
+    }
+
+    pub fn send_voice(&self, data: &[u8], mime: &str, duration_ms: u64, peer: Option<&str>) -> Result<()> {
+        crate::voice::send(&self.0, data, mime, duration_ms, peer, &[], None)
+    }
+
+    pub fn send_chat_reply(&self, text: &str, peer: Option<&str>, reply_to: Option<&str>) -> Result<()> {
+        crate::notes::send_chat(&self.0, text, peer, None, reply_to)
+    }
+
+    pub fn send_voice_reply(&self, data: &[u8], mime: &str, duration_ms: u64, peer: Option<&str>, waveform: &[u8], reply_to: Option<&str>) -> Result<()> {
+        crate::voice::send(&self.0, data, mime, duration_ms, peer, waveform, reply_to)
+    }
+
+    pub fn voice_bytes(&self, id: &str) -> Result<Vec<u8>> {
+        crate::voice::bytes(&self.0, id)
+    }
+
     /// Человек увидел полученные сообщения.
     pub fn notes_seen(&self, ids: &[String]) {
         let inner = &self.0;
@@ -729,7 +767,8 @@ impl Engine {
     /// Идёт ли передача (тогда обновление подождёт).
     pub fn busy(&self) -> bool {
         let inner = &self.0;
-        if !lock(&inner.downloads).is_empty() || !lock(&inner.uploads).is_empty() {
+        if !lock(&inner.downloads).is_empty() || !lock(&inner.uploads).is_empty()
+            || !lock(&inner.voice_downloads).is_empty() || inner.voice_serving.load(Ordering::Relaxed) > 0 || inner.chat_cloud_busy.load(Ordering::Relaxed) {
             return true;
         }
         let s = inner.st();

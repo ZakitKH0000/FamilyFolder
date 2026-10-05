@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '../crates/app/ui/island.js'), 'utf8');
-const bootstrap = source.lastIndexOf('(async () => {');
+const bootstrap = source.lastIndexOf("addEventListener('DOMContentLoaded'");
 assert.ok(bootstrap > 0, 'island bootstrap found');
 
 async function checkDrop(x, y, expectedPeers) {
@@ -34,7 +34,7 @@ async function checkDrop(x, y, expectedPeers) {
       calls.push({ command, args });
       return command === 'send_dropped' ? 1 : null;
     } } } },
-    document: { querySelector: node }, Papych,
+    document: { querySelector: node }, Papych, MiniChat: {close(){}},
     setInterval() {}, setTimeout() {}, clearTimeout() {},
     icon: () => '', innerWidth: 480, innerHeight: 360, Date,
   });

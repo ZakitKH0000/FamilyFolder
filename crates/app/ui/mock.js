@@ -41,7 +41,7 @@
     cloud: q.has('cloud')
       ? { connected: true, provider: 'webdav', local: false, url: 'https://app.koofr.net/dav/Koofr', user: 'zakir', login: 'zakir · app.koofr.net', uploading: true, auth_code: null, auth_url: null, error: null, client_id: '', client_secret: '' }
       : { connected: false, provider: '', local: false, url: '', user: '', login: '', uploading: false, auth_code: q.has('auth') ? '4821-7730' : null, auth_url: 'https://ya.ru/device', error: null, client_id: '', client_secret: '' },
-    version: '1.4.1',
+    version: '1.5.0',
     history_shares: q.has('share') ? [{ peer_id: 'm', name: MOM, added_by: BRO, files: 12 }] : [],
     lang: q.get('lang') || 'ru',
     paused_until: q.has('paused') ? now + 3600e3 : 0,
@@ -51,7 +51,7 @@
       { id: 'n2', outgoing: true, peer_id: '', peer: '', text: L('Купите хлеба по дороге', 'Grab some bread on the way home 🍞'), created_at: now - 3600e3, seen: true, to: [{ id: 'b', name: BRO, delivered: true, needs_update: false }, { id: 'm', name: MOM, delivered: false, needs_update: !en }] },
     ],
   };
-  const LANGS = [['ru', 'Русский'], ['en', 'English'], ['uk', 'Українська'], ['de', 'Deutsch'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['tr', 'Türkçe'], ['zh', '中文']];
+  const LANGS = [['ru', 'Русский'], ['en', 'English'], ['de', 'Deutsch'], ['es', 'Español'], ['fr', 'Français'], ['pt', 'Português'], ['tr', 'Türkçe'], ['zh', '中文']];
   async function strings() {
     const lang = state.settings.language || 'ru';
     const load = async l => { try { return await (await fetch(`/locales/${l}.json`)).json(); } catch { return {}; } };
@@ -84,6 +84,15 @@
           state.notes.unshift({ id: 'n' + Date.now(), outgoing: true, peer_id: '', peer: '', text: args.text, created_at: Date.now(), seen: true, to: state.peers.filter(p => !args.peers.length || args.peers.includes(p.id)).map(p => ({ id: p.id, name: p.name, delivered: false, needs_update: false })) });
           return null;
         }
+        if (cmd === 'send_chat' || cmd === 'send_voice') {
+          state.notes.push({ id: 'n' + Date.now(), outgoing: true, peer_id: '', peer: '', text: args.text || '',
+            created_at: Date.now(), seen: true, group: !args.peer, reply_to: args.replyTo || null,
+            voice: cmd === 'send_voice' ? { duration_ms: args.durationMs, mime: args.mime, waveform: args.waveform || [] } : null, voice_ready: true,
+            to: state.peers.filter(p => !args.peer || args.peer === p.id).map(p => ({ id: p.id, name: p.name, delivered: p.online, needs_update: false })) });
+          window.__emit('state', state); return null;
+        }
+        if (cmd === 'notes_seen') { state.notes.forEach(n => { if (args.ids.includes(n.id)) n.seen = true; }); window.__emit('state', state); }
+        if (cmd === 'dismiss') { state.notes = state.notes.filter(n => n.id !== args.id); window.__emit('state', state); }
         return null;
       },
     },

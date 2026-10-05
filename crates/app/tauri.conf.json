@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Family Folder",
   "mainBinaryName": "ObshayaPapka",
-  "version": "1.4.5",
+  "version": "1.5.0",
   "identifier": "com.obshayapapka.app",
   "build": {
     "frontendDist": "ui"
@@ -11,7 +11,7 @@
     "withGlobalTauri": true,
     "windows": [],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'",
+      "csp": "default-src 'self'; img-src 'self' data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'",
       "dangerousDisableAssetCspModification": [
         "style-src"
       ]
@@ -23,8 +23,8 @@
       "nsis"
     ],
     "publisher": "Family Folder",
-    "shortDescription": "Family Folder — a folder shared by your family computers",
-    "longDescription": "A folder that delivers files between your family computers directly over the internet.",
+    "shortDescription": "Family Folder — files, chats and voice messages for your family",
+    "longDescription": "Share files, chat and send voice messages between your family computers. Papych brings a quick chat to the top of your screen; optional encrypted cloud delivery works when devices are not online together.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -40,7 +40,6 @@
         "languages": [
           "English",
           "Russian",
-          "Ukrainian",
           "German",
           "Spanish",
           "French",

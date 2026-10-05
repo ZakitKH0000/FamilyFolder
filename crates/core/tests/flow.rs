@@ -272,6 +272,46 @@ async fn full_flow() {
     b.dismiss(&id);
     assert!(b.snapshot().notes.is_empty());
 
+    println!("    чаты: семейный, личный, голос вне общей папки");
+    a.send_chat("семейный чат", None).unwrap();
+    for e in [&b, &c] {
+        let n = wait_for("семейный разговор", 30, || e.snapshot().notes.into_iter().find(|n| n.text == "семейный чат")).await;
+        assert!(n.group);
+    }
+    a.send_chat("личный чат В", Some(&c.device_id())).unwrap();
+    let n = wait_for("личный разговор", 30, || c.snapshot().notes.into_iter().find(|n| n.text == "личный чат В")).await;
+    assert!(!n.group);
+    assert!(b.snapshot().notes.iter().all(|n| n.text != "личный чат В"));
+    let reply_id = n.id.clone();
+    a.send_chat_reply("ответ В", Some(&c.device_id()), Some(&reply_id)).unwrap();
+    let reply = wait_for("ответ с цитатой", 30, || c.snapshot().notes.into_iter().find(|n| n.text == "ответ В")).await;
+    assert_eq!(reply.reply_to.as_deref(), Some(reply_id.as_str()));
+    assert!(a.send_chat_reply("чужой разговор", Some(&b.device_id()), Some(&reply_id)).is_err());
+    assert!(a.send_chat_reply("чужой семейный разговор", None, Some(&reply_id)).is_err());
+    c.pause(None);
+    let voice = data(400_000, 12); // синтетические байты: проверка транспорта, не аудиокодека
+    a.send_voice_reply(&voice, "audio/webm", 2500, Some(&c.device_id()), &[128; 48], Some(&reply_id)).unwrap();
+    let n = wait_for("метаданные голоса", 30, || c.snapshot().notes.into_iter().find(|n| n.voice.is_some())).await;
+    assert!(!n.group);
+    assert_eq!(n.reply_to.as_deref(), Some(reply_id.as_str()));
+    assert_eq!(n.voice.as_ref().unwrap().waveform, vec![128; 48]);
+    assert!(!n.voice_ready, "пауза запрещает скачивание записи");
+    assert!(b.snapshot().notes.iter().all(|n| n.voice.is_none()));
+    c.shutdown().await;
+    let c = start(&dc, &fc).await;
+    assert!(c.snapshot().notes.iter().any(|v| v.id == n.id && !v.voice_ready));
+    assert!(c.snapshot().notes.iter().any(|v| v.text == "личный чат В"));
+    c.resume();
+    wait_for("голос доставлен", 30, || c.snapshot().notes.into_iter().find(|v| v.id == n.id && v.voice_ready)).await;
+    assert_eq!(c.voice_bytes(&n.id).unwrap(), voice);
+    assert!(std::fs::read_dir(&fc).unwrap().flatten().all(|e| !e.file_name().to_string_lossy().ends_with(".audio")));
+    wait_for("подтверждение голоса", 30, || a.snapshot().notes.into_iter().find(|v| v.id == n.id && v.to.iter().all(|p| p.delivered))).await;
+    assert!(a.send_voice(b"x", "text/html", 1000, None).is_err());
+    assert!(c.voice_bytes("../../outside").is_err());
+    c.dismiss(&n.id);
+    assert!(c.voice_bytes(&n.id).is_err());
+    assert!(!dc.join("chat").join("voice").join(format!("{}.audio", n.id)).exists());
+
     println!("11. Пауза у отправителя");
     a.pause(None);
     wait_for("Б видит паузу А", 30, || b.snapshot().peers.iter().any(|p| p.name == "Компьютер А" && p.paused).then_some(())).await;

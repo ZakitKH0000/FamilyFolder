@@ -179,6 +179,7 @@ async fn run_download(inner: Arc<Inner>, id: String, source: Source) {
 }
 
 async fn download(inner: &Arc<Inner>, id: &str, source: Source) -> Result<(), DlError> {
+    if !crate::voice::valid_id(id) { return Err(anyhow!("invalid offer id").into()); }
     let (offer, mut done_files) = {
         let mut s = inner.st();
         let i = s.incoming.iter_mut().find(|i| i.offer.id == id).ok_or_else(|| anyhow!(crate::t!("err.offer_not_found")))?;

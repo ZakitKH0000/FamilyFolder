@@ -1,6 +1,6 @@
 [package]
 name = "obshaya-app"
-version = "1.4.5"
+version = "1.5.0"
 edition = "2024"
 description = "Общая папка"
 
@@ -33,6 +33,7 @@ windows = { version = "0.62", features = [
     "ApplicationModel_Activation",
     "Foundation",
     "Win32_Foundation",
+    "Win32_Media_Audio",
     "Win32_Graphics_Dwm",
     "Win32_Graphics_Gdi",
     "Win32_Storage_FileSystem",

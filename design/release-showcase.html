@@ -1,0 +1,60 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Family Folder 1.5</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',sans-serif;color:#edf4ff;background:#070d18}
+body{background:radial-gradient(ellipse at 14% 65%,#12354c,transparent 58%),radial-gradient(ellipse at 92% 8%,#20305c,transparent 45%),#070d18}
+.copy{position:absolute;left:64px;top:60px;width:570px}.brand{font-size:23px;letter-spacing:1px;color:#b3c5dc}.brand b{color:#60cdff;background:#60cdff12;padding:6px 12px;border:1px solid #60cdff33;border-radius:20px;margin-left:12px;font-size:16px}
+h1{font-size:54px;line-height:1.1;letter-spacing:-2px;margin:28px 0 20px;max-width:570px}h1 em{font-style:normal;color:#60cdff}.desc{font-size:21px;line-height:1.5;color:#a8bad0;max-width:520px}.pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:23px;max-width:500px}.pill{padding:9px 15px;border:1px solid #ffffff16;border-radius:12px;font-size:16px;background:#ffffff04}
+#robot{position:absolute;left:76px;bottom:67px;width:145px}#robot .papych{width:145px}.caption{position:absolute;left:234px;bottom:105px;font-size:17px;color:#aabdd2;max-width:360px;line-height:1.5}.caption b{display:block;color:#eef7ff;font-size:21px}
+.device{position:absolute;left:751px;top:53px;width:380px;height:620px;border-radius:19px;overflow:hidden;box-shadow:0 25px 90px #000a;border:1px solid #ffffff24}.device iframe{width:380px;height:620px;border:0}.shade{position:absolute;left:692px;top:50px;width:480px;height:600px}.shade iframe{width:480px;height:600px;border:0;background:transparent}.device.off,.shade.off{display:none}
+.footer{position:absolute;bottom:22px;left:64px;right:64px;display:flex;justify-content:space-between;color:#6e87a0;font-size:12px;letter-spacing:.4px}
+.orb{position:absolute;right:60px;bottom:38px;color:#60cdff;font-size:15px;border-top:1px solid #60cdff44;padding-top:10px;width:390px}.off{display:none}
+</style></head><body><div class="copy"><div class="brand">FAMILY FOLDER <b>1.5.0</b></div><h1 id="title"></h1><div class="desc" id="desc"></div><div class="pills" id="pills"></div></div>
+<div id="robot"></div><div class="caption" id="caption"></div><div class="device" id="device"><iframe id="main"></iframe></div><div class="shade off" id="shade"><iframe id="mini"></iframe></div><div class="orb off" id="orb"></div>
+<div class="footer"><span>Windows 10 / 11 · Microsoft Store · GitHub</span><span id="foot"></span></div>
+<script src="/papych.js"></script><script>
+const q=new URLSearchParams(location.search), en=q.get('lang')==='en', scene=q.get('scene')||'hero';
+const w=(a,b)=>en?b:a, sleep=s=>new Promise(r=>setTimeout(r,s*1000));
+const texts={
+hero:[w('Ваша семья.<br><em>Всегда на связи.</em>','Your family.<br><em>Always connected.</em>'),w('Файлы, чаты и голосовые — между вашими компьютерами. С Папычем рядом.','Files, chats and voice messages — between your computers. With Papych by your side.')],
+chats:[w('Один клик.<br><em>И вы в чате.</em>','One click.<br><em>And you’re chatting.</em>'),w('Ответьте прямо из шторки. Одному человеку или всей семье — текстом и голосом.','Reply right from the top bar. To one person or the whole family — with text or voice.')],
+voice:[w('Ваш голос.<br><em>Его характер.</em>','Your voice.<br><em>His personality.</em>'),w('Запись, волна звука и перемотка. Папыч держит микрофон и оживает в ритме голоса.','Record, see the waveform and seek. Papych holds the mic and comes alive to your voice.')],
+cloud:[w('Вы выключили ПК.<br><em>Сообщение дойдёт.</em>','You turned off your PC.<br><em>The message arrives.</em>'),w('Подключите своё облако. Текст и голос будут ждать адресата в зашифрованной очереди.','Connect your own cloud. Text and voice wait for the recipient in an encrypted queue.')]
+};
+document.querySelector('#title').innerHTML=texts[scene][0];document.querySelector('#desc').textContent=texts[scene][1];
+document.querySelector('#pills').innerHTML=[w('Файлы и папки','Files & folders'),w('Личные и семейные чаты','Private & family chats'),w('Голосовые','Voice messages'),w('Облачная доставка','Cloud delivery')].map(x=>`<span class="pill">${x}</span>`).join('');
+document.querySelector('#caption').innerHTML=`<b>${w('Знакомьтесь: Папыч','Meet Papych')}</b>${w('Маленький робот. Большая помощь.','A little robot. A lot of help.')}`;
+document.querySelector('#foot').textContent=w('8 языков · Без рекламы и аналитики','8 languages · No ads or analytics');
+const bot=new Papych(document.querySelector('#robot'),{variant:'robot',crop:true});
+const main=document.querySelector('#main'),mini=document.querySelector('#mini');
+const levels=Array.from({length:48},(_,i)=>Math.round(35+180*Math.abs(Math.sin(i*.41)*Math.cos(i*.19))));
+function seed(win){win.eval(`S.notes=${JSON.stringify([
+{id:'sample-1',outgoing:false,peer_id:'b',peer:w('Брат','Brother'),text:w('Привет! Как дела? 👋','Hey! How are you? 👋'),created_at:Date.now()-120000,seen:true,to:[],group:false},
+{id:'sample-2',outgoing:true,peer_id:'',peer:'',text:w('Всё хорошо! Сейчас пришлю голосовое.','All good! Sending you a voice message.'),created_at:Date.now()-60000,seen:true,to:[{id:'b',name:w('Брат','Brother'),delivered:true}],group:false,reply_to:'sample-1'},
+{id:'sample-voice',outgoing:true,peer_id:'',peer:'',text:'',created_at:Date.now()-30000,seen:true,to:[{id:'b',name:w('Брат','Brother'),delivered:scene!=='cloud'}],group:false,voice_ready:true,cloud_ready:scene==='cloud',voice:{size:18000,hash:'demo',mime:'audio/webm',duration_ms:17400,waveform:levels}}
+])}; S.settings.tips=false; S.preparing=[]; S.incoming=[]; S.outgoing=[];`);}
+window.__ready=false;
+(async()=>{
+ main.src='/index.html?lang='+w('ru','en'); await new Promise(r=>main.onload=r); await sleep(.8); seed(main.contentWindow);main.contentWindow.eval("closeViews(); render(); switchTab('chat'); Chat.select('b');");
+ if(scene==='chats'){
+  document.querySelector('#device').classList.add('off');document.querySelector('#shade').classList.remove('off');
+  mini.src='/island.html?manual&lang='+w('ru','en');await new Promise(r=>mini.onload=r);await sleep(.5);seed(mini.contentWindow);
+  mini.contentWindow.eval("open('peek'); MiniChat.open();");await sleep(.3);mini.contentWindow.eval("Chat.select('b'); Chat.reply('sample-1');");
+ }
+ if(scene==='cloud'){main.contentWindow.eval("S.peers[0].online=false; render(); Chat.update();");bot.chatCloud();}
+ if(scene==='voice'){bot.chatVoice('record',.6);}
+ window.__ready=true;
+})();
+window.__go=async()=>{
+ while(!window.__ready)await sleep(.1);
+ const win=main.contentWindow;
+ bot.chatUnfold();await sleep(.6);
+ const actor=win.eval('Buddy.actor()');
+ win.eval("Buddy.chatVisit(document.querySelector('#chat-mic'),'record');");
+ for(let i=0;i<24;i++){actor.chatVoice('record',Math.abs(Math.sin(i*.7)));bot.chatVoice('record',Math.abs(Math.sin(i*.5)));await sleep(.075);}
+ win.eval("Buddy.chatReturn();");await sleep(.5);
+ win.eval("Buddy.chatVisit(document.querySelector('.voice-play'),'play');");
+ for(let i=0;i<32;i++){actor.chatVoice('play',Math.abs(Math.sin(i*.8)));bot.chatVoice('play',Math.abs(Math.sin(i*.8)));const bars=main.contentDocument.querySelectorAll('.wave-bars i');bars.forEach((b,j)=>b.classList.toggle('played',j<i*1.5));await sleep(.07);}
+ win.eval("Buddy.chatReturn();");bot.chatCloud();document.querySelector('#orb').classList.remove('off');document.querySelector('#orb').textContent=w('В облаке — можно выключать компьютер','In the cloud — safe to turn off your computer');
+ await sleep(1.2);window.__done=true;
+};
+</script></body></html>

@@ -28,7 +28,7 @@ function t(key, p) {
 
 function pluralForm(n) {
   const lang = L._lang;
-  if (lang === 'ru' || lang === 'uk') {
+  if (lang === 'ru') {
     const a = n % 10, b = n % 100;
     if (a === 1 && b !== 11) return 'one';
     if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return 'few';
@@ -330,82 +330,13 @@ function linkify(text) {
   return out + esc(text.slice(last));
 }
 
-function noteWho(n) {
-  if (!n.outgoing) return `<span>${t('in.from', { name: n.peer })}</span>`;
-  const status = r => r.delivered ? `${icon('check')}${t('out.delivered')}` : r.needs_update ? t('note.needs_update') : t('note.waiting');
-  if (n.to.length === 1) {
-    const r = n.to[0];
-    return `<span>${t('out.to', { name: r.name })}</span><span class="state ${r.delivered ? 'ok' : 'wait'}">${status(r)}</span>`;
-  }
-  return `<span>${t('note.to_all')}</span>` + n.to.map(r =>
-    `<span class="state ${r.delivered ? 'ok' : 'wait'}">${r.delivered ? icon('check') : ''}${esc(r.name)}${r.delivered ? '' : ' — ' + status(r)}</span>`).join('');
-}
-
-function noteCard(n) {
-  const url = firstUrl(n.text);
-  return `<div class="card note-card ${!n.outgoing && !n.seen ? 'highlight' : ''}"><div class="tile note">${icon('chat')}</div>
-    <div class="body"><div class="meta">${noteWho(n)}<span>${ago(n.created_at)}</span></div>
-    <div class="note-text selectable">${linkify(n.text)}</div>
-    <div class="actions"><button class="btn sm ${n.outgoing ? '' : 'primary'}" data-act="copy-note" data-id="${esc(n.id)}">${icon('copy')}${t('btn.copy')}</button>
-    ${url ? `<button class="btn sm" data-act="open-url" data-url="${esc(url)}">${icon('link')}${t('btn.open_link')}</button>` : ''}</div></div>${dismissBtn(n.id)}</div>`;
-}
-
-// Окно «Сообщение семье»: текст и кому (всем или одному устройству).
-let noteTo = '';
+// Старые точки входа (кнопка и Ctrl+V) теперь открывают выбранный чат.
 function openComposer(text) {
   if (view !== 'main') closeViews();
-  if (noteTo && !S.peers.some(p => p.id === noteTo)) noteTo = '';
-  const m = $('#modal');
-  const chip = (id, name) => `<button class="to-chip ${noteTo === id ? 'on' : ''}" data-to="${esc(id)}">${id ? `<i style="background:${Papych.colorOf(id)}"></i>` : ''}${esc(name)}</button>`;
-  m.innerHTML = `<div class="dialog note-dlg"><div class="content">
-      <h3>${t('note.title')}</h3>
-      <textarea id="note-text" rows="5" maxlength="20000" placeholder="${esc(t('note.placeholder'))}"></textarea>
-      ${S.peers.length ? `<div class="note-to"><span>${t('note.to')}</span>${chip('', t('note.all'))}${S.peers.map(p => chip(p.id, p.name)).join('')}</div>`
-        : `<div class="note warn">${icon('warning')}${t('peer.none')}</div>`}
-      <small class="hint">${t('note.hint')}</small></div>
-    <div class="buttons"><button class="btn primary" data-r="send" ${S.peers.length ? '' : 'disabled'}>${icon('chat')}${t('note.send')}</button>
-      <button class="btn" data-r="0">${t('btn.cancel')}</button></div></div>`;
-  m.classList.remove('hidden');
-  const ta = $('#note-text');
-  ta.value = text || '';
-  ta.focus();
-  ta.setSelectionRange(ta.value.length, ta.value.length);
-  ta.addEventListener('input', () => Buddy.watch(ta));
-  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); send(); } });
-  m.onclick = e => {
-    const to = e.target.closest('[data-to]');
-    if (to) {
-      noteTo = to.dataset.to;
-      m.querySelectorAll('[data-to]').forEach(b => b.classList.toggle('on', b === to));
-      return;
-    }
-    const b = e.target.closest('[data-r]');
-    if (b && b.dataset.r === 'send') return send();
-    if (b || e.target === m) m.classList.add('hidden');
-  };
-  async function send() {
-    const body = ta.value.trim();
-    if (!body) return ta.focus();
-    const r = ta.getBoundingClientRect();
-    try {
-      await invoke('send_note', { text: body, peers: noteTo ? [noteTo] : [] });
-    } catch (e) {
-      return toast(esc(String(e)), 'err');
-    }
-    m.classList.add('hidden');
-    switchTab('out');
-    Buddy.noteSent([r.left + r.width / 2, r.top + r.height / 2], noteTo ? Papych.colorOf(noteTo) : '#60cdff');
-  }
+  switchTab('chat');
+  Chat.compose(text || '');
 }
-
-// Полученные сообщения считаются прочитанными, когда их показали на экране пару секунд.
-let seenTimer = 0;
-function markSeen() {
-  clearTimeout(seenTimer);
-  if (tab !== 'in' || view !== 'main' || !Buddy.visible()) return;
-  const ids = S.notes.filter(n => !n.outgoing && !n.seen).map(n => n.id);
-  if (ids.length) seenTimer = setTimeout(() => invoke('notes_seen', { ids }).catch(() => {}), 2500);
-}
+function markSeen() { Chat.markSeen(); }
 
 function renderKeyed(container, items, emptyHtml) {
   if (!items.length) {
@@ -447,10 +378,8 @@ function groups(list) {
 function renderLists() {
   const active = i => ['new', 'queued', 'downloading', 'failed'].includes(i.state);
   const inAct = S.incoming.filter(active), inDone = S.incoming.filter(i => !active(i));
-  const notesIn = S.notes.filter(n => !n.outgoing);
-  // Сверху — новые сообщения и файлы, ждущие ответа; ниже — всё остальное по времени.
+  // Сверху — файлы, ждущие ответа; ниже — история.
   const inItems = [
-    ...notesIn.filter(n => !n.seen).map(n => ({ key: n.id, html: noteCard(n) })),
     ...inAct.map(it => ({
       key: it.id, html: incomingCard(it),
       update: it.state === 'downloading' ? el => updateProgress(el, it.done, it.total, it.speed, esc(it.source || '')) : null,
@@ -458,7 +387,6 @@ function renderLists() {
   ];
   const inEarlier = [
     ...inDone.map(it => ({ at: it.created_at, key: it.id, html: incomingCard(it) })),
-    ...notesIn.filter(n => n.seen).map(n => ({ at: n.created_at, key: n.id, html: noteCard(n) })),
   ].sort((a, b) => b.at - a.at);
   if (inEarlier.length) {
     if (inItems.length) inItems.push({ key: 's:in', html: `<div class="section-title">${t('list.earlier')}</div>` });
@@ -470,8 +398,6 @@ function renderLists() {
   const all = groups(S.outgoing);
   const outActive = all.filter(g => !g.every(i => FINAL.includes(i.state)));
   const outDone = all.filter(g => g.every(i => FINAL.includes(i.state)));
-  const notesOut = S.notes.filter(n => n.outgoing);
-  const noteWaits = n => n.to.some(r => !r.delivered);
   const outItems = S.preparing.map(p => ({
     key: 'prep:' + p.item,
     html: `<div class="card">${tile({ kind: 'file' })}<div class="body"><div class="name">${esc(p.item)}</div>
@@ -488,10 +414,8 @@ function renderLists() {
       if (cu && up) updateProgress(cu, up.cloud_done, up.total, up.speed, t('out.to_cloud'));
     },
   }));
-  notesOut.filter(noteWaits).reverse().forEach(n => outItems.unshift({ key: n.id, html: noteCard(n) }));
   const outEarlier = [
     ...outDone.map(g => ({ at: g[0].created_at, key: 'b:' + g[0].batch, html: outgoingCard(g) })),
-    ...notesOut.filter(n => !noteWaits(n)).map(n => ({ at: n.created_at, key: n.id, html: noteCard(n) })),
   ].sort((a, b) => b.at - a.at);
   if (outEarlier.length) {
     if (outItems.length) outItems.push({ key: 's:out', html: `<div class="section-title">${t('list.earlier')}</div>` });
@@ -502,9 +426,9 @@ function renderLists() {
     <h3>${t('out.empty_title')}</h3><p>${t('out.empty_text', { who: '\u0000' }).replace('\u0000', who)}</p>
     <button class="btn" data-act="open-folder">${icon('folderOpen')}${t('btn.open_folder')}</button></div>`);
 
-  const newCount = S.incoming.filter(i => i.state === 'new').length + notesIn.filter(n => !n.seen).length;
+  const newCount = S.incoming.filter(i => i.state === 'new').length;
   $('#count-in').textContent = newCount ? String(newCount) : '';
-  const busy = outActive.length + S.preparing.length + notesOut.filter(noteWaits).length;
+  const busy = outActive.length + S.preparing.length;
   $('#count-out').textContent = busy ? String(busy) : '';
   markSeen();
 }
@@ -563,9 +487,14 @@ function moveInk() {
 
 function switchTab(name) {
   tab = name;
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name);
+    b.setAttribute('aria-selected', String(b.dataset.tab === name));
+  });
   $('#list-in').classList.toggle('hidden', name !== 'in');
   $('#list-out').classList.toggle('hidden', name !== 'out');
+  $('#chat').classList.toggle('hidden', name !== 'chat');
+  Chat.show(name === 'chat');
   moveInk();
 }
 
@@ -578,6 +507,7 @@ function render() {
   renderLists();
   renderCloudChip();
   Buddy.update(S);
+  Chat.update();
   if (view === 'settings') renderSettingsDynamic();
   if (view === 'onboarding') renderOnboarding();
 }
@@ -605,6 +535,7 @@ function langSelect(id) {
 }
 
 function openSettings(focus) {
+  Chat.stop();
   view = 'settings';
   const el = $('#settings');
   el.classList.remove('hidden');
@@ -647,6 +578,8 @@ function openSettings(focus) {
       <div id="island-extra" class="stack ${st.island ? '' : 'hidden'}">
         ${row(t('set.notify_via'), t('set.notify_via_hint'), `<select id="set-notify-via" style="width:150px">${opt('Island', t('notify.island'), st.notify_via)}${opt('Windows', t('notify.windows'), st.notify_via)}${opt('Both', t('notify.both'), st.notify_via)}</select>`)}
       </div>
+      ${row(t('set.message_sound'), '', sw('set-message-sound', st.message_sound !== false))}
+      ${row(t('set.message_volume'), '', `<input id="set-message-volume" type="range" min="0" max="100" value="${st.message_volume ?? 35}" style="width:110px"><button class="btn sm" id="set-sound-preview">${t('set.sound_preview')}</button>`)}
       ${row(t('set.notify'), t('set.notify_hint'), sw('set-notify', st.notify_delivered))}
 
       <div class="group-title">${t('set.papych')}</div>
@@ -681,6 +614,9 @@ function openSettings(focus) {
   $('#set-auto-update').addEventListener('change', e => saveSettings({ auto_update: e.target.checked }));
   $('#set-autostart').addEventListener('change', e => saveSettings({ autostart: e.target.checked }));
   $('#set-dock').addEventListener('change', e => saveSettings({ dock_panel: e.target.checked }));
+  $('#set-message-sound').onchange = e => saveSettings({ message_sound: e.target.checked });
+  $('#set-message-volume').onchange = e => saveSettings({ message_volume: Number(e.target.value) });
+  $('#set-sound-preview').onclick = () => invoke('preview_message_sound');
   $('#set-notify').addEventListener('change', e => saveSettings({ notify_delivered: e.target.checked }));
   $('#set-island').addEventListener('change', e => {
     $('#island-extra').classList.toggle('hidden', !e.target.checked);
@@ -925,15 +861,6 @@ async function act(btn) {
   switch (a) {
     case 'note-new': return openComposer('');
     case 'tour': closeViews(); return run(invoke('tour_start'));
-    case 'copy-note': {
-      const n = S.notes.find(x => x.id === id);
-      if (!n) return;
-      await run(invoke('copy_text', { text: n.text }));
-      Buddy.copied();
-      toast(t('note.copied'));
-      if (!n.outgoing && !n.seen) invoke('notes_seen', { ids: [n.id] }).catch(() => {});
-      return;
-    }
     case 'open-url': return run(invoke('open_url', { url: btn.dataset.url }));
     case 'accept': return Buddy.press(btn, () => run(invoke('accept', { id })).catch(() => {}));
     case 'share-history':
@@ -1085,9 +1012,9 @@ async function init() {
   $('#btn-hide').innerHTML = icon('minimize');
   document.querySelectorAll('[data-icon]').forEach(i => (i.innerHTML = icon(i.dataset.icon)));
   $('#btn-settings').onclick = () => (view === 'settings' || view === 'about' ? closeViews() : openSettings());
-  $('#btn-hide').onclick = () => invoke('hide_panel');
+  $('#btn-hide').onclick = () => { Chat.stop(); invoke('hide_panel'); };
   $('#btn-open-folder').onclick = () => run(invoke('open_folder'));
-  $('#btn-note').title = t('note.title');
+  $('#btn-note').title = t('chat.title');
   $('#cloud-chip').onclick = () => openSettings('cloud');
   $('#pause-chip').dataset.act = 'pause-menu';
   document.querySelectorAll('.tab').forEach(b => (b.onclick = () => switchTab(b.dataset.tab)));
@@ -1102,7 +1029,7 @@ async function init() {
       if (!$('#pop').classList.contains('hidden')) return $('#pop').classList.add('hidden');
       if (view === 'about') openSettings();
       else if (view === 'settings') closeViews();
-      else invoke('hide_panel');
+      else { Chat.stop(); invoke('hide_panel'); }
     }
   });
   document.addEventListener('paste', e => {
@@ -1119,6 +1046,7 @@ async function init() {
   Buddy.init();
 
   S = await invoke('get_state');
+  Chat.init();
   render();
   requestAnimationFrame(moveInk);
   await T.event.listen('state', e => { S = e.payload; render(); });

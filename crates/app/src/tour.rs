@@ -11,7 +11,7 @@ use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
 use crate::{AppState, island, panel};
 
 /// Номер экскурсии: увеличить, когда в ней появится новое, — тогда её покажут ещё раз после обновления.
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
 pub const LABEL: &str = "tour";
 
 /// При запуске: экскурсию ещё не видели — показать, когда человек за компьютером.

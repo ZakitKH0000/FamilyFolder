@@ -91,3 +91,36 @@ button.icon { padding: 6px 8px; display: inline-flex; }
 .offer .name { flex: 1; min-width: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #d8d8e0; }
 .offer button { padding: 4px 10px; font-size: 12px; }
 .more { font-size: 11.5px; color: #a7a7b2; padding: 6px 0 0 6px; }
+
+/* Мини-чат продолжает чёрное стекло шторки, использует общие пузыри Chat. */
+:root { --accent:#60cdff; --on-accent:#002233; --accent-soft:#60cdff1c; --card:#ffffff09; --solid:#10151f; --stroke:#ffffff12; --text-2:#b7bdca; --text-3:#858d9b; --track:#ffffff12; --subtle-hover:#ffffff08; --danger:#f66c7d; }
+.hidden { display:none !important; }
+.isl[data-mode="chat"] { width:452px; padding-bottom:14px; }
+.isl[data-mode="chat"] .bar { min-height:66px; }
+#chat { height:min(410px, calc(100vh - 125px)); margin-top:8px; border-top:1px solid var(--stroke); }
+#chat .chat-head { padding:9px 0; }
+#chat .chat-history { padding:22px 2px 12px; }
+#chat .chat-compose { padding:10px 0 0; }
+#chat select, #chat textarea { color:#f3f3f5; background:#141a24; border:1px solid #ffffff1c; border-radius:8px; padding:8px; box-sizing:border-box; font:inherit; }
+#chat option { background:#141a24; }
+#chat textarea { min-height:48px; }
+#chat .btn { display:inline-flex; gap:5px; align-items:center; justify-content:center; }
+#chat .sm { padding:5px; }
+#chat .ico, .acts .ico { width:17px; height:17px; }
+#chat .chat-text { font-size:12.5px; }
+#chat a { color:var(--accent); }
+#chat .chat-message { max-width:90%; }
+#chat .voice-player { width:238px; }
+#chat .chat-cloud { display:flex; align-items:center; gap:4px; font-size:10px; margin-top:6px; color:var(--accent); }
+.mini-badge:empty { display:none; }
+.mini-badge { background:var(--accent); color:#002233; font-size:10px; padding:0 4px; border-radius:8px; }
+#bot.mini-visiting { position:relative; z-index:30; pointer-events:none; }
+#toast { padding:8px; background:#241b24; border-radius:8px; margin-top:8px; font-size:12px; }
+#mini-confirm { position:absolute; inset:100px 12px auto; padding:16px; background:var(--solid); border:1px solid var(--stroke); border-radius:12px; z-index:40; box-shadow:0 8px 30px #0009; }
+@media(prefers-reduced-motion:reduce){ .isl { transition:none !important; } }
+
+html { color-scheme:dark; }
+#chat .chat-history::-webkit-scrollbar { width:6px; }
+#chat .chat-history::-webkit-scrollbar-track { background:transparent; }
+#chat .chat-history::-webkit-scrollbar-thumb { background:#ffffff28; border-radius:6px; }
+#chat textarea:focus, #chat select:focus { outline:2px solid #60cdff66; outline-offset:1px; }

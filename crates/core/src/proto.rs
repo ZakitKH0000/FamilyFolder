@@ -15,6 +15,7 @@ pub const STREAM_CONTROL: u8 = 1;
 pub const STREAM_FILE: u8 = 2;
 /// Установщик новой версии программы для другого устройства семьи.
 pub const STREAM_UPDATE: u8 = 3;
+pub const STREAM_VOICE: u8 = 4;
 
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -48,6 +49,8 @@ pub enum Msg {
     NoteAck {
         id: String,
     },
+    /// Только устройствам 1.5.0+: отдельный разговор и метаданные голоса.
+    Chat { note: crate::notes::ChatMsg },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -108,8 +111,12 @@ pub async fn write_msg<T: Serialize>(w: &mut (impl AsyncWrite + Unpin), msg: &T)
 }
 
 pub async fn read_msg<T: DeserializeOwned>(r: &mut (impl AsyncRead + Unpin)) -> Result<T> {
+    read_bounded_msg(r, MAX_MSG).await
+}
+
+pub async fn read_bounded_msg<T: DeserializeOwned>(r: &mut (impl AsyncRead + Unpin), max: u32) -> Result<T> {
     let len = r.read_u32().await?;
-    anyhow::ensure!(len <= MAX_MSG, "control message too large");
+    anyhow::ensure!(len <= max, "control message too large");
     let mut buf = vec![0; len as usize];
     r.read_exact(&mut buf).await?;
     Ok(serde_json::from_slice(&buf)?)

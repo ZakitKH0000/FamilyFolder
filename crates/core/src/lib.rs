@@ -1,6 +1,7 @@
 //! «Общая папка»: синхронизация папки между компьютерами семьи без своего сервера.
 
 mod cloud;
+mod chat_cloud;
 pub mod i18n;
 mod config;
 mod crypto;
@@ -17,6 +18,7 @@ mod transfer;
 mod update;
 mod util;
 mod view;
+mod voice;
 
 pub use config::{AutoAccept, CloudMode, NotifyVia, Settings, default_data_dir, default_folder};
 pub use engine::{Engine, Event};

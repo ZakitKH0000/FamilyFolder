@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Family Folder</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="chat.css">
   <script src="mock.js"></script>
 </head>
 <body>
@@ -24,16 +25,18 @@
       <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="in" role="tab"><span data-t="tab.in"></span><span class="count" id="count-in"></span></button>
         <button class="tab" data-tab="out" role="tab"><span data-t="tab.out"></span><span class="count" id="count-out"></span></button>
+        <button class="tab" data-tab="chat" role="tab"><span data-t="chat.title"></span><span class="count" id="count-chat"></span></button>
         <div class="tab-ink" id="tab-ink"></div>
         <div class="buddy" id="buddy"><div class="buddy-bot"></div><div class="buddy-say hidden"></div></div>
       </nav>
       <div class="lists">
         <div class="list" id="list-in"></div>
         <div class="list hidden" id="list-out"></div>
+        <section id="chat" class="chat hidden" aria-label="Chat"></section>
       </div>
       <footer class="footer">
         <button class="btn subtle" id="btn-open-folder"><span class="ico" data-icon="folderOpen"></span><span data-t="btn.open_folder"></span></button>
-        <button class="btn subtle note-btn" id="btn-note" data-act="note-new"><span class="ico" data-icon="chat"></span><span data-t="note.btn"></span></button>
+        <button class="btn subtle note-btn" id="btn-note" data-act="note-new"><span class="ico" data-icon="chat"></span><span data-t="chat.title"></span></button>
         <div class="spacer"></div>
         <button class="chip" id="pause-chip"></button>
         <button class="chip" id="cloud-chip"></button>
@@ -51,6 +54,7 @@
   <script src="icons.js"></script>
   <script src="papych.js"></script>
   <script src="buddy.js"></script>
+  <script src="chat.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

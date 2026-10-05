@@ -14,7 +14,6 @@ use serde_json::Value;
 pub const LANGS: &[(&str, &str)] = &[
     ("ru", "Русский"),
     ("en", "English"),
-    ("uk", "Українська"),
     ("de", "Deutsch"),
     ("es", "Español"),
     ("fr", "Français"),
@@ -26,7 +25,6 @@ pub const LANGS: &[(&str, &str)] = &[
 const SOURCES: &[(&str, &str)] = &[
     ("ru", include_str!("../locales/ru.json")),
     ("en", include_str!("../locales/en.json")),
-    ("uk", include_str!("../locales/uk.json")),
     ("de", include_str!("../locales/de.json")),
     ("es", include_str!("../locales/es.json")),
     ("fr", include_str!("../locales/fr.json")),
@@ -68,8 +66,7 @@ pub fn system_lang() -> &'static str {
     #[cfg(not(windows))]
     let primary = 0x09;
     match primary {
-        0x19 | 0x23 | 0x3f | 0x43 | 0x40 | 0x28 | 0x2b | 0x2c | 0x37 | 0x42 => "ru",
-        0x22 => "uk",
+        0x22 | 0x19 | 0x23 | 0x3f | 0x43 | 0x40 | 0x28 | 0x2b | 0x2c | 0x37 | 0x42 => "ru",
         0x07 => "de",
         0x0a => "es",
         0x0c => "fr",
@@ -108,7 +105,7 @@ pub fn tf(key: &str, args: &[(&str, &dyn Display)]) -> String {
 /// Форма слова для числа: one / few / many / other — по правилам текущего языка.
 pub fn plural_form(lang: &str, n: u64) -> &'static str {
     match lang {
-        "ru" | "uk" => {
+        "ru" => {
             let (a, b) = (n % 10, n % 100);
             if a == 1 && b != 11 {
                 "one"

@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncWriteExt, AsyncReadExt};
 
 use crate::config::CloudMode;
 use crate::crypto::{content_key, open, seal};
@@ -45,7 +45,7 @@ pub(crate) fn configured(inner: &Inner) -> bool {
     inner.st().cloud.as_ref().is_some_and(CloudCreds::usable)
 }
 
-fn backend(inner: &Inner) -> Option<Backend> {
+pub(crate) fn backend(inner: &Inner) -> Option<Backend> {
     let c = inner.st().cloud.clone().filter(CloudCreds::usable)?;
     Some(match c.kind() {
         "folder" => Backend::Local(PathBuf::from(c.local_dir?)),
@@ -121,7 +121,7 @@ impl Backend {
         }
     }
 
-    async fn put(&self, dirs: &Dirs, path: &str, data: Vec<u8>) -> Result<()> {
+    pub(crate) async fn put(&self, dirs: &Dirs, path: &str, data: Vec<u8>) -> Result<()> {
         match self {
             Backend::Local(base) => {
                 let p = local_path(base, path);
@@ -165,12 +165,17 @@ impl Backend {
     }
 
     async fn get(&self, path: &str) -> Result<Option<Vec<u8>>> {
+        self.get_bounded(path, (CHUNK * 2) as usize).await
+    }
+    pub(crate) async fn get_bounded(&self, path: &str, max: usize) -> Result<Option<Vec<u8>>> {
         match self {
-            Backend::Local(base) => match tokio::fs::read(local_path(base, path)).await {
-                Ok(d) => Ok(Some(d)),
-                Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
-                Err(e) => Err(e.into()),
-            },
+            Backend::Local(base) => {
+                let file = match tokio::fs::File::open(local_path(base,path)).await {
+                    Ok(f)=>f, Err(e) if e.kind()==std::io::ErrorKind::NotFound=>return Ok(None), Err(e)=>return Err(e.into()),
+                };
+                let mut data=Vec::new(); file.take(max as u64+1).read_to_end(&mut data).await?;
+                anyhow::ensure!(data.len()<=max,"cloud object too large"); Ok(Some(data))
+            }
             Backend::Yandex { http, .. } => {
                 let resp = http
                     .get(format!("{API}/download"))
@@ -189,7 +194,7 @@ impl Backend {
                 if !resp.status().is_success() {
                     bail!(t!("cloud.err.download", reason = resp.status()));
                 }
-                Ok(Some(resp.bytes().await?.to_vec()))
+                Ok(Some(bounded_response(resp, max).await?))
             }
             Backend::WebDav { .. } => {
                 let resp = self.dav("GET", path).send().await?;
@@ -200,12 +205,12 @@ impl Backend {
                 if !resp.status().is_success() {
                     bail!(t!("cloud.err.download", reason = dav_error(code)));
                 }
-                Ok(Some(resp.bytes().await?.to_vec()))
+                Ok(Some(bounded_response(resp, max).await?))
             }
         }
     }
 
-    async fn list(&self, dir: &str) -> Result<Vec<String>> {
+    pub(crate) async fn list(&self, dir: &str) -> Result<Vec<String>> {
         match self {
             Backend::Local(base) => {
                 let mut out = Vec::new();
@@ -274,7 +279,7 @@ impl Backend {
     }
 
     /// Удаляет насовсем (мимо Корзины Диска, чтобы не занимать место).
-    async fn delete(&self, path: &str) -> Result<()> {
+    pub(crate) async fn delete(&self, path: &str) -> Result<()> {
         match self {
             Backend::Local(base) => {
                 let p = local_path(base, path);
@@ -394,7 +399,18 @@ fn percent_decode(s: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
+async fn bounded_response(mut resp: reqwest::Response, max: usize) -> Result<Vec<u8>> {
+    anyhow::ensure!(resp.content_length().is_none_or(|n| n <= max as u64), "cloud object too large");
+    let mut data = Vec::new();
+    while let Some(chunk) = resp.chunk().await? {
+        anyhow::ensure!(data.len() + chunk.len() <= max, "cloud object too large");
+        data.extend_from_slice(&chunk);
+    }
+    Ok(data)
+}
+
 pub(crate) fn start(inner: &Arc<Inner>) {
+    crate::chat_cloud::start(inner.clone());
     crate::engine::spawn(upload_loop(inner.clone()));
     crate::engine::spawn(poll_loop(inner.clone()));
 }

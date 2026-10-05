@@ -54,6 +54,13 @@ pub struct NoteView {
     pub seen: bool,
     /// Отправленное: кому и дошло ли.
     pub to: Vec<NoteTo>,
+    pub group: bool,
+    pub legacy: bool,
+    pub voice: Option<crate::voice::Voice>,
+    pub voice_ready: bool,
+    pub reply_to: Option<String>,
+    pub cloud_ready: bool,
+    pub cloud_error: Option<String>,
 }
 
 #[derive(Serialize, Clone)]
@@ -290,7 +297,8 @@ pub(crate) fn build(inner: &Arc<Inner>) -> UiState {
                     id: p.clone(),
                     name: name_of(p),
                     delivered,
-                    needs_update: !delivered && lock(&inner.peer_versions).get(p).is_some_and(|v| crate::util::version_newer(crate::notes::SINCE, v)),
+                    needs_update: !delivered && lock(&inner.peer_versions).get(p).is_some_and(|v| crate::util::version_newer(
+                        if n.group.is_some() { crate::notes::CHAT_SINCE } else { crate::notes::SINCE }, v)),
                 })
                 .collect();
             NoteView {
@@ -301,6 +309,13 @@ pub(crate) fn build(inner: &Arc<Inner>) -> UiState {
                 text: n.text.clone(),
                 created_at: n.created_at,
                 seen: n.seen,
+                group: n.group.unwrap_or(!outgoing || n.pending.len() + n.delivered.len() != 1),
+                legacy: n.group.is_none(),
+                voice: n.voice.clone(),
+                reply_to: n.reply_to.clone(),
+                cloud_ready: !n.pending.is_empty() && n.pending.iter().all(|p| n.cloud_ready.contains(p)),
+                cloud_error: n.cloud_error.clone(),
+                voice_ready: n.voice.is_some() && crate::voice::path(inner, &n.id).is_ok_and(|p| p.is_file()),
                 to,
             }
         })

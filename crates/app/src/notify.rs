@@ -43,6 +43,8 @@ fn on_action(app: &AppHandle, action: Option<String>) {
         if let Some(text) = engine.note_text(id) {
             let _ = crate::shell::copy_text(&text);
         }
+    } else if let Some(id) = action.strip_prefix("chat:") {
+        crate::open_chat(app.clone(), id.into());
     } else if let Some(url) = action.strip_prefix("url:") {
         crate::shell::open_url(url);
     } else if let Some(path) = action.strip_prefix("open:") {
@@ -109,15 +111,17 @@ pub fn delivered(app: &AppHandle, title: &str, to: &str) {
     let _ = toast.show();
 }
 
-pub fn note(app: &AppHandle, id: &str, from: &str, text: &str, url: Option<&str>) {
+pub fn note(app: &AppHandle, id: &str, from: &str, text: &str, url: Option<&str>, voice: bool) {
     let app2 = app.clone();
     let short: String = text.chars().take(240).collect();
-    let mut toast = base(&t!("note.from", from = from)).text1(&short).add_button(&t!("btn.copy"), &format!("copy:{id}"));
+    let mut toast = base(&t!("note.from", from = from)).sound(None).text1(&short).add_button(&t!("chat.title"), &format!("chat:{id}"));
+    if !voice { toast = toast.add_button(&t!("btn.copy"), &format!("copy:{id}")); }
     if let Some(url) = url {
         toast = toast.add_button(&t!("btn.open_link"), &format!("url:{url}"));
     }
+    let default_action = format!("chat:{id}");
     let toast = toast.on_activated(move |action| {
-        on_action(&app2, action.or(Some("in".into())));
+        on_action(&app2, action.or(Some(default_action.clone())));
         Ok(())
     });
     if let Err(e) = toast.show() {

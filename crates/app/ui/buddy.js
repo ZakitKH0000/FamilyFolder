@@ -11,6 +11,7 @@ const Buddy = (() => {
   let bot = null, box = null, bubble = null;
   let visible = true, flying = false, away = false, prev = null;
   let sayTimer = 0, hoverTimer = 0;
+  let chatPose = false, chatGo = null, chatBack = null, chatToken = 0, chatButton = null;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   function init() {
@@ -79,8 +80,8 @@ const Buddy = (() => {
     if (!bot) return;
     const paused = S.paused_until > Date.now();
     const offline = S.peers.length > 0 && !S.peers.some(p => p.online);
-    if (bot.state.paused !== paused) bot.pause(paused);
-    if (bot.state.offline !== offline) bot.offline(offline);
+    if (!chatPose && bot.state.paused !== paused) bot.pause(paused);
+    if (!chatPose && bot.state.offline !== offline) bot.offline(offline);
     const moving = [...S.incoming, ...S.outgoing].filter(i => i.state === 'downloading' && i.total);
     const total = moving.reduce((a, i) => a + i.total, 0);
     bot.setProgress(moving.length ? moving.reduce((a, i) => a + i.done, 0) / total : null);
@@ -90,7 +91,7 @@ const Buddy = (() => {
       out: new Map(S.outgoing.map(i => [i.id, i.state])),
       notes: new Map(S.notes.map(n => [n.id, delivered(n)])),
     };
-    if (prev && visible && !flying && !away) events(S);
+    if (prev && visible && !flying && !away && !chatPose) events(S);
     prev = cur;
   }
 
@@ -100,7 +101,7 @@ const Buddy = (() => {
     const delivered = S.outgoing.filter(i => i.state === 'delivered' && prev.out.has(i.id) && prev.out.get(i.id) !== 'delivered');
     const note = S.notes.find(n => !n.outgoing && !prev.notes.has(n.id));
     const noteDone = S.notes.find(n => n.outgoing && prev.notes.get(n.id) === false && n.to.every(r => r.delivered));
-    if (note) {
+    if (note && tab !== 'chat') {
       spitTo({ id: note.id, kind: 'note' });
       speak(t('note.from', { from: note.peer }));
     } else if (fresh.length) {
@@ -115,7 +116,7 @@ const Buddy = (() => {
       const d = delivered[0];
       bot.delivered(Papych.colorOf(d.peer_id));
       speak(t('toast.delivered_to', { to: d.peer }));
-    } else if (noteDone) {
+    } else if (noteDone && tab !== 'chat') {
       bot.delivered(noteDone.to.length === 1 ? Papych.colorOf(noteDone.to[0].id) : '#60cdff');
       speak(noteDone.to.length === 1 ? t('toast.delivered_to', { to: noteDone.to[0].name }) : t('note.delivered_all'));
     }
@@ -133,7 +134,9 @@ const Buddy = (() => {
 
   // Новый файл или сообщение вылетает изо рта Папыча и ложится в свою карточку (или на вкладку).
   function spitTo(it) {
-    let target = cardOf(it.id)?.querySelector('.tile');
+    let target = it.kind === 'note' && tab === 'chat'
+      ? document.querySelector(`[data-message="${CSS.escape(it.id)}"] .chat-text, [data-message="${CSS.escape(it.id)}"] .voice-play`)
+      : cardOf(it.id)?.querySelector('.tile');
     if (!target || !target.offsetParent) target = document.querySelector('.tab[data-tab="in"]');
     if (!target || reduce) { flash(it.id); return; }
     bot.spit();
@@ -254,5 +257,59 @@ const Buddy = (() => {
     }
   }
 
-  return { init, update, press, declined, speak, noteSent, watch, copied, visible: () => visible && !away };
+  // Один Папыч для вкладок файлов и чата: все прыжки начинаются с верхней полки.
+  function chatVoice(mode, level = 0) {
+    if (!bot) return;
+    chatPose = true;
+    box.classList.toggle('recording', mode === 'record');
+    box.classList.toggle('speaking', mode === 'play');
+    if (!chatGo || chatGo.playState === 'finished') bot.chatVoice(mode, level);
+  }
+  function chatVisit(button, mode) {
+    if (!bot || !button?.isConnected) return;
+    const token = ++chatToken;
+    const matrix = new DOMMatrix(getComputedStyle(box).transform);
+    chatGo?.cancel(); chatBack?.cancel(); chatGo = chatBack = null;
+    chatButton?.classList.remove('pressed'); chatButton = button;
+    chatVoice(mode);
+    if (reduce) { button.classList.add('pressed'); return; }
+    const home = box.getBoundingClientRect(), target = button.getBoundingClientRect();
+    const dx = target.left + target.width / 2 - home.left - home.width / 2;
+    const dy = target.top + target.height / 2 - home.bottom + home.height * .15;
+    flying = true; box.classList.add('chat-visiting'); bot.leap(true);
+    chatGo = box.animate(arc(matrix.m41, matrix.m42, dx, dy, 45 + Math.abs(dy) * .12, .85),
+      { duration: 480, easing: 'cubic-bezier(.3,.1,.35,1)', fill: 'forwards' });
+    chatGo.finished.then(() => {
+      if (token !== chatToken) return;
+      bot.leap(false); bot.chatVoice(mode, 0); chatButton?.classList.add('pressed');
+    }).catch(() => {});
+  }
+  function chatTarget(button) {
+    if (!chatPose || !button) return;
+    const pressed = chatButton?.classList.contains('pressed');
+    chatButton = button;
+    if (pressed || chatGo?.playState === 'finished') button.classList.add('pressed');
+  }
+  function chatReturn() {
+    if (!bot || !chatPose && !chatGo && !chatBack) return;
+    const token = ++chatToken;
+    const transform = getComputedStyle(box).transform;
+    chatGo?.cancel(); chatBack?.cancel(); chatGo = chatBack = null;
+    chatButton?.classList.remove('pressed'); chatButton = null;
+    chatPose = false; box.classList.remove('recording', 'speaking'); bot.settle();
+    if (reduce || transform === 'none') { flying = false; box.classList.remove('chat-visiting'); return; }
+    flying = true;
+    chatBack = box.animate([{ transform }, { transform: 'translate(0,0) scale(1)' }],
+      { duration: 360, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' });
+    chatBack.finished.then(() => {
+      if (token !== chatToken) return;
+      chatBack.cancel(); chatBack = null; flying = false;
+      box.classList.remove('chat-visiting'); bot.sp.squash.v += 3;
+    }).catch(() => {});
+  }
+  function chatReceived(n) {
+    if (!chatPose && !flying) spitTo({ id: n.id, kind: 'note' });
+  }
+
+  return { init, update, press, declined, speak, noteSent, watch, copied, chatVoice, chatVisit, chatTarget, chatReturn, chatReceived, actor: () => bot, visible: () => visible && !away };
 })();

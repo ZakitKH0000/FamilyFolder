@@ -13,7 +13,7 @@ use tokio::sync::mpsc;
 use crate::config::{AUTO_ACCEPT_RESERVE, AutoAccept};
 use crate::engine::{Event, Inner, PeerConn, lock};
 use crate::model::{InState, Incoming, Offer, OutState, Status};
-use crate::proto::{Msg, PAIR_ALPN, STREAM_CONTROL, STREAM_FILE, STREAM_UPDATE, SYNC_ALPN, read_msg, write_msg};
+use crate::proto::{Msg, PAIR_ALPN, STREAM_CONTROL, STREAM_FILE, STREAM_UPDATE, STREAM_VOICE, SYNC_ALPN, read_msg, write_msg};
 use crate::util::{fmt_size, now_ms};
 use crate::{pairing, transfer};
 
@@ -181,7 +181,20 @@ async fn accept_streams(
             Err(_) => break,
         };
         let Ok(tag) = recv.read_u8().await else { continue };
+        if !inner.st().group.is_member(&peer) {
+            conn.close(1u32.into(), b"removed");
+            break;
+        }
         match tag {
+            STREAM_VOICE => {
+                let inner = inner.clone();
+                let peer = peer.clone();
+                crate::engine::spawn(async move {
+                    if let Err(e) = crate::voice::serve(&inner, &peer, send, recv).await {
+                        tracing::debug!("отдача голоса: {e:#}");
+                    }
+                });
+            }
             STREAM_CONTROL => {
                 if let Some(rx) = ctrl_rx.take() {
                     crate::engine::spawn(control_writer(send, rx));
@@ -263,6 +276,10 @@ pub(crate) fn send_pending_offers(inner: &Arc<Inner>, peer: &str) {
 }
 
 fn handle_msg(inner: &Arc<Inner>, peer: &str, msg: Msg) {
+    if !inner.st().group.is_member(peer) {
+        if let Some(conn) = inner.conn(peer) { conn.close(1u32.into(), b"removed"); }
+        return;
+    }
     match msg {
         Msg::Hello { name, members, removed, cloud, version, update, paused } => {
             if members.iter().any(|m| m.id != inner.me && !inner.st().group.is_member(&m.id)) {
@@ -315,6 +332,12 @@ fn handle_msg(inner: &Arc<Inner>, peer: &str, msg: Msg) {
                 (changed, new_members)
             };
             if changed {
+                let removed: Vec<String> = lock(&inner.conns).keys().cloned().collect();
+                for id in removed {
+                    if !inner.st().group.is_member(&id) {
+                        if let Some(conn) = lock(&inner.conns).remove(&id) { conn.conn.close(1u32.into(), b"removed"); }
+                    }
+                }
                 inner.save_soon();
                 inner.broadcast_hello();
                 inner.dial_now.notify_one();
@@ -332,11 +355,13 @@ fn handle_msg(inner: &Arc<Inner>, peer: &str, msg: Msg) {
         Msg::Ping => {}
         Msg::Note { note } => crate::notes::received(inner, peer, note),
         Msg::NoteAck { id } => crate::notes::acked(inner, peer, &id),
+        Msg::Chat { note } => crate::notes::received_chat(inner, peer, note),
     }
 }
 
 /// Новые предложения от `peer`. Используется и для предложений из облака.
 pub(crate) fn handle_offers(inner: &Arc<Inner>, peer: &str, offers: Vec<Offer>) {
+    if !inner.st().group.is_member(peer) { return; }
     let mut events = Vec::new();
     let mut statuses = Vec::new();
     let mut superseded = Vec::new();
@@ -348,7 +373,9 @@ pub(crate) fn handle_offers(inner: &Arc<Inner>, peer: &str, offers: Vec<Offer>) 
         let auto_exe = s.settings.auto_accept_exe;
         let free = crate::util::free_space(&s.settings.folder);
         for offer in offers {
-            if offer.from != peer {
+            if offer.from != peer || !crate::voice::valid_id(&offer.id)
+                || offer.supersedes.iter().any(|id| !crate::voice::valid_id(id))
+                || offer.files.iter().any(|f| crate::util::safe_join(&s.settings.folder, &f.path).is_none()) {
                 continue;
             }
             if let Some(inc) = s.incoming.iter_mut().find(|i| i.offer.id == offer.id) {
@@ -362,12 +389,13 @@ pub(crate) fn handle_offers(inner: &Arc<Inner>, peer: &str, offers: Vec<Offer>) 
             }
             let mut queued = false;
             for sid in &offer.supersedes {
-                if let Some(old) = s.incoming.iter_mut().find(|i| &i.offer.id == sid) {
+                if let Some(old) = s.incoming.iter_mut().find(|i| &i.offer.id == sid && i.offer.from == peer) {
                     match old.state {
                         InState::New => old.state = InState::Superseded,
                         InState::Queued | InState::Failed => {
                             old.state = InState::Superseded;
-                            queued = true;
+                            queued |= offer.files.iter().all(|f| old.offer.files.iter().any(|o|
+                                o.path == f.path && crate::util::is_executable(&o.path) == crate::util::is_executable(&f.path)));
                         }
                         _ => continue,
                     }

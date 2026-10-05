@@ -7,6 +7,7 @@ mod drop_target;
 mod island;
 mod menu;
 mod notify;
+mod sound;
 mod panel;
 mod send;
 mod shell;
@@ -95,6 +96,41 @@ fn open_url(url: String) {
 #[tauri::command]
 fn send_note(st: State<AppState>, text: String, peers: Vec<String>) -> Res {
     st.engine.send_note(&text, &peers).map_err(err)
+}
+
+#[tauri::command]
+fn send_chat(st: State<AppState>, text: String, peer: Option<String>, reply_to: Option<String>) -> Res {
+    st.engine.send_chat_reply(&text, peer.as_deref(), reply_to.as_deref()).map_err(err)
+}
+
+#[tauri::command]
+fn send_voice(st: State<AppState>, data: String, mime: String, duration_ms: u64, peer: Option<String>, waveform: Option<Vec<u8>>, reply_to: Option<String>) -> Res {
+    if data.len() > 12 * 1024 * 1024 { return Err(t!("chat.voice_limit")); }
+    let bytes = data_encoding::BASE64.decode(data.as_bytes()).map_err(err)?;
+    st.engine.send_voice_reply(&bytes, &mime, duration_ms, peer.as_deref(), waveform.as_deref().unwrap_or_default(), reply_to.as_deref()).map_err(err)
+}
+
+#[tauri::command]
+fn voice_data(st: State<AppState>, id: String) -> Res<String> {
+    st.engine.voice_bytes(&id).map(|b| data_encoding::BASE64.encode(&b)).map_err(err)
+}
+
+#[tauri::command]
+fn show_chat(app: AppHandle, peer: String) {
+    if !peer.is_empty() && !app.state::<AppState>().engine.snapshot().peers.iter().any(|p|p.id==peer) { return; }
+    panel::show_floating(&app);
+    let _ = app.emit("show-chat", peer);
+}
+
+#[tauri::command]
+fn open_chat(app: AppHandle, id: String) {
+    if let Some(n) = app.state::<AppState>().engine.snapshot().notes.iter().find(|n| n.id == id) {
+        let peer = if n.group { String::new() } else if n.outgoing {
+            n.to.first().map(|p| p.id.clone()).unwrap_or_default()
+        } else { n.peer_id.clone() };
+        panel::show_floating(&app);
+        let _ = app.emit("show-chat", peer);
+    }
 }
 
 #[tauri::command]
@@ -356,6 +392,7 @@ fn backdrop() -> bool {
 
 fn pump_events(app: AppHandle, mut rx: tokio::sync::mpsc::UnboundedReceiver<Event>) {
     tauri::async_runtime::spawn(async move {
+        let mut notified = std::collections::HashSet::new();
         while let Some(ev) = rx.recv().await {
             let engine = app.state::<AppState>().engine.clone();
             match ev {
@@ -402,13 +439,17 @@ fn pump_events(app: AppHandle, mut rx: tokio::sync::mpsc::UnboundedReceiver<Even
                     }
                 }
                 Event::Note { id, from, text } => {
+                    if !notified.insert(id.clone()) { continue; }
+                    if notified.len() > 10_000 { notified.clear(); notified.insert(id.clone()); }
+                    if let Some(n) = engine.snapshot().notes.iter().find(|n| n.id == id) { sound::message(&app, n); }
                     let r = island::route(&app);
                     let url = shell::first_url(&text);
+                    let voice = engine.snapshot().notes.iter().any(|n| n.id == id && n.voice.is_some());
                     if r.island {
-                        island::show(&app, "note", json!({ "id": id, "from": from, "text": text, "url": url }));
+                        island::show(&app, "note", json!({ "id": id, "from": from, "text": text, "url": url, "voice": voice }));
                     }
                     if r.toast {
-                        notify::note(&app, &id, &from, &text, url.as_deref())
+                        notify::note(&app, &id, &from, &text, url.as_deref(), voice)
                     }
                 }
                 Event::UpdateReady { version, path, sig, hash } => updater::downloaded(&app, version, path, sig, hash),
@@ -523,6 +564,10 @@ fn main() {
             open_folder,
             open_url,
             send_note,
+            send_chat,
+            send_voice,
+            voice_data,
+            open_chat,
             notes_seen,
             copy_text,
             open_logs,
@@ -547,6 +592,10 @@ fn main() {
             hide_panel,
             quit,
             island::island_close,
+            island::island_chat_focus,
+            sound::chat_presence,
+            sound::preview_message_sound,
+            show_chat,
             island::island_pass,
             island::island_ready,
             drop_target::island_drop_bounds,

@@ -630,6 +630,7 @@
       this.rest();
     }
     settle() {
+      if (this.scene?.startsWith('chat-')) this.n.slotFront.replaceChildren();
       this.tok++; this.busy = false; this.scene = null; this.look = null; this.shake = 0; this.waveT = 0; this.wave2 = false;
       const sp = this.sp, st = this.state;
       sp.open.to = 0; sp.squash.to = 0; sp.lean.to = 0; sp.progA.to = 0; sp.sweat.to = 0;
@@ -904,6 +905,43 @@
       this.sp.lean.to = 0; this.expr('worried');
       await this.wait(0.4);
       this.settle();
+    }
+
+    // Чат: микрофон/наушники, рот и руки двигаются по реальному уровню звука.
+    // Раскрывает мини-чат руками; облачный конверт показывает на животике.
+    async chatUnfold() {
+      this.begin('chat-unfold'); this.expr('happy');
+      this.sp.hlx.to = -55; this.sp.hly.to = 18;
+      this.sp.hrx.to = 55; this.sp.hry.to = 18;
+      this.sp.squash.v += 4;
+      await this.wait(0.42);
+      if (this.scene === 'chat-unfold') this.settle();
+    }
+    async chatCloud() {
+      this.begin('chat-cloud'); this.expr('happy');
+      el('path', {d:'M -20 -25 H 20 V -4 H -20 Z M -20 -25 L 0 -11 L 20 -25',fill:'none',stroke:'#60cdff','stroke-width':3}, this.n.slotFront);
+      this.sp.hrx.to = 42; this.sp.hry.to = -35;
+      await this.wait(1.1);
+      if (this.scene === 'chat-cloud') this.settle();
+    }
+    chatVoice(mode, level = 0) {
+      if (this.scene !== 'chat-' + mode) {
+        this.begin('chat-' + mode);
+        this.expr(mode === 'record' ? 'focused' : mode === 'pause' ? 'neutral' : 'happy');
+        el('path', { d: 'M -51 -90 Q -50 -146 0 -146 Q 50 -146 51 -90', fill: 'none', stroke: '#60cdff', 'stroke-width': 7 }, this.n.slotFront);
+        el('rect', { x: -58, y: -105, width: 12, height: 28, rx: 5, fill: '#60cdff' }, this.n.slotFront);
+        el('rect', { x: 46, y: -105, width: 12, height: 28, rx: 5, fill: '#60cdff' }, this.n.slotFront);
+        if (mode === 'record') {
+          el('rect', { x: 35, y: -59, width: 14, height: 24, rx: 7, fill: '#f66c7d' }, this.n.slotFront);
+          el('path', { d: 'M 42 -35 V -20 M 32 -19 H 52', stroke: '#f66c7d', 'stroke-width': 4 }, this.n.slotFront);
+        }
+      }
+      const v = clamp(level);
+      this.sp.mO.to = mode === 'play' ? 2 + v * 18 : 2;
+      this.sp.hrx.to = mode === 'record' ? 42 : 60 + v * 10;
+      this.sp.hry.to = mode === 'record' ? -37 : -35 - v * 28;
+      this.sp.hlx.to = -55 - v * 8;
+      this.sp.hly.to = -30 - v * 18;
     }
 
     // Полоска на животике: общий ход загрузок (null — убрать).

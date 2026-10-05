@@ -70,6 +70,7 @@ function open(reason, data) {
     return;
   }
   demo = false;
+  if (mode === 'chat' && reason !== 'demo') { if (reason === 'offer') addOffer(data); return; }
   // Пока бросают файлы, сообщения не перебивают: новые файлы просто встанут в очередь.
   if (mode === 'drag' && reason !== 'drag') {
     if (reason === 'offer') addOffer(data);
@@ -127,7 +128,8 @@ function open(reason, data) {
     case 'note': {
       until = now + 15000;
       head(t('note.from', { from: data.from }), esc(data.text));
-      const list = [[`${icon('copy')}${t('btn.copy')}`, () => copyNote(data), 'primary']];
+      const list = [[`${icon('reply')}${t('chat.reply')}`, () => MiniChat.open(data.id), 'primary']];
+      if (!data.voice) list.push([`${icon('copy')}${t('btn.copy')}`, () => copyNote(data)]);
       if (data.url) list.push([`${icon('link')}${t('btn.open_link')}`, () => invoke('open_url', { url: data.url })]);
       acts(list);
       bot.receive({ note: true });
@@ -173,6 +175,7 @@ function close() {
   demoTimers = [];
   demo = false;
   if (!mode) return;
+  MiniChat.close();
   mode = null;
   invoke('island_drop_bounds', { x: 0, y: 0, width: 0, height: 0 });
   dropBounds = '';
@@ -203,6 +206,7 @@ function renderPeek() {
   if (S && S.paused_until > Date.now()) title = t('island.paused');
   head(title, activity());
   acts([
+    [`${icon('chat')}<span class="mini-badge">${S?.notes.filter(n => !n.outgoing && !n.seen).length || ''}</span>`, () => MiniChat.open(), 'icon', t('chat.title')],
     [icon('folderOpen'), () => invoke('open_folder'), 'icon', t('btn.open_folder')],
     [icon('app'), () => { invoke('show_main'); close(); }, 'icon', t('island.open_window')],
   ]);
@@ -350,9 +354,11 @@ function onState(st) {
     if (offers.length) renderOffer(); else close();
   }
   if (mode === 'peek') renderPeek();
+  if (window.MiniChat) MiniChat.update();
   isl.classList.toggle('busy', [...S.incoming, ...S.outgoing].some(i => i.state === 'downloading'));
   const paused = S.paused_until > Date.now();
   const offline = S.peers.length > 0 && !S.peers.some(p => p.online);
+  if (mode === 'chat') return;
   if (bot.state.paused !== paused) bot.pause(paused);
   if (bot.state.offline !== offline) bot.offline(offline);
 }
@@ -388,6 +394,7 @@ setInterval(() => {
     }
     return;
   }
+  if (mode === 'chat') { setPass(!inside); return; }
   setPass(!inside);
   if (inside) {
     leftAt = 0;
@@ -407,6 +414,7 @@ function onDrag(e) {
   const x = p.position ? p.position.x / k : cursor.x;
   const y = p.position ? p.position.y / k : cursor.y;
   if (p.type === 'enter' || p.type === 'over') {
+    if (mode === 'chat') return;
     if (mode !== 'drag') open('drag');
     cursor = { x, y, down: true };
     Papych.cursor(x, y);
@@ -418,9 +426,10 @@ function onDrag(e) {
   }
 }
 
-(async () => {
+addEventListener('DOMContentLoaded', async () => {
   L = await invoke('get_strings');
   S = await invoke('get_state');
+  MiniChat.init();
   onState(S);
   await T.event.listen('state', e => onState(e.payload));
   await T.event.listen('island-open', e => open(e.payload.reason, e.payload.data));
@@ -432,4 +441,4 @@ function onDrag(e) {
   T.webview.getCurrentWebview().onDragDropEvent(onDrag);
   await T.event.listen('island-drag', onDrag);
   for (const o of await invoke('island_ready')) open(o.reason, o.data);
-})();
+});

@@ -57,10 +57,12 @@ pub fn safe_join(root: &Path, rel: &str) -> Option<PathBuf> {
     let mut p = root.to_path_buf();
     let mut any = false;
     for comp in rel.split('/') {
-        if comp.is_empty() || comp == "." || comp == ".." {
+        if comp.is_empty() || comp == "." || comp == ".." || comp.contains(['\\', ':']) {
             return None;
         }
-        p.push(sanitize_name(comp));
+        let name = sanitize_name(comp);
+        if name.eq_ignore_ascii_case(".obshaya") { return None; }
+        p.push(name);
         any = true;
     }
     any.then_some(p)
@@ -188,6 +190,7 @@ pub fn is_executable(name: &str) -> bool {
 }
 
 pub fn ext_of(name: &str) -> Option<String> {
+    let name = name.trim().trim_end_matches(['.', ' ']);
     let (_, ext) = name.rsplit_once('.')?;
     Some(ext.to_lowercase())
 }
@@ -212,4 +215,19 @@ pub fn kind_of(name: &str, is_folder: bool) -> &'static str {
 
 pub fn is_image(name: &str) -> bool {
     kind_of(name, false) == "image"
+}
+
+#[cfg(test)]
+mod path_tests {
+    use super::*;
+    #[test]
+    fn network_paths_cannot_target_service_data() {
+        let root = Path::new("C:\\family");
+        assert!(safe_join(root, "photos/summer.jpg").is_some());
+        for rel in ["../secret", ".obshaya/state.json", "Photos/.OBSHAYA/identity", "C:\\secret"] {
+            assert!(safe_join(root, rel).is_none(), "{rel}");
+        }
+        assert!(is_executable("setup.EXE. "));
+        assert!(!is_executable("photo.jpg"));
+    }
 }

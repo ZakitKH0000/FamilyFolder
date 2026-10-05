@@ -24,7 +24,14 @@ if ($Test) {
     Get-AppxPackage -Name $testName | Remove-AppxPackage
 }
 $pkg = Join-Path $root ('target\store\' + $(if ($Test) { 'test' } else { 'store' }))
-if (Test-Path $pkg) { Remove-Item $pkg -Recurse -Force }
+$pkg = [IO.Path]::GetFullPath($pkg)
+$stagingRoot = [IO.Path]::GetFullPath((Join-Path $root 'target\store'))
+if ((Split-Path $pkg -Parent) -ne $stagingRoot) { throw 'Unexpected Store staging path' }
+if (Test-Path $pkg) {
+    if ((Get-Item -LiteralPath $pkg).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Store staging must not be a link' }
+    if (Get-ChildItem -LiteralPath $pkg -Force -Recurse -Attributes ReparsePoint) { throw 'Store staging contains links' }
+    Remove-Item -LiteralPath $pkg -Recurse -Force
+}
 New-Item -ItemType Directory -Force $pkg | Out-Null
 Copy-Item (Join-Path $root 'target\release\ObshayaPapka.exe') $pkg
 Copy-Item (Join-Path $root 'crates\app\store\Assets') $pkg -Recurse

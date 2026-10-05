@@ -69,6 +69,8 @@ pub struct Settings {
     /// Шторка сверху экрана: выезжает у верхнего края и принимает перетащенные файлы.
     pub island: bool,
     pub notify_via: NotifyVia,
+    pub message_sound: bool,
+    pub message_volume: u8,
     /// Какую экскурсию с Папычем уже показали (`TOUR_VERSION`); меньше — показать после запуска.
     pub tour_seen: u32,
     /// Подсказки Папыча в облачке.
@@ -94,6 +96,8 @@ impl Default for Settings {
             auto_update: true,
             island: true,
             notify_via: NotifyVia::Island,
+            message_sound: true,
+            message_volume: 35,
             tour_seen: 0,
             tips: true,
         }
